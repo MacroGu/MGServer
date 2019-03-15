@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<server> 
+	<!-- websocket address info -->
+	<wsaddressInfo>
+		<value type="serverIp" value="localhost" /> 
+		<value type="port" value="2018" />    
+		<value type="maxevents" value="1000" />
+		<value type="backlog" value="1000" />
+		<value type="threadNums" value="2" />
+	</wsaddressInfo>
+
+	<!-- normal socket address info -->
+	<nsaddressInfo>
+		<value type="serverIp" value="localhost" /> 
+		<value type="port" value="2019" />    
+		<value type="maxevents" value="1000" />
+		<value type="backlog" value="1000" />
+		<value type="threadNums" value="2" />
+	</nsaddressInfo>	
+	
+	<kafka>
+		<value type="myTopic" value="1234" />
+		<value type="globalTopic" value="4321" />
+	</kafka>
+	
+</server>

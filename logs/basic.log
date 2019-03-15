@@ -1,0 +1,8 @@
+[2019-03-15 16:59:56.148] [basic_logger] [error] thread start cb is null
+[2019-03-15 16:59:56.148] [basic_logger] [error] thread start cb is null
+[2019-03-15 17:00:31.083] [basic_logger] [info] get client message ID: %d ,size: %d
+[2019-03-15 17:00:34.911] [basic_logger] [info] get client message ID: %d ,size: %d
+[2019-03-15 17:00:36.548] [basic_logger] [info] get client message ID: %d ,size: %d
+[2019-03-15 17:00:38.102] [basic_logger] [info] get client message ID: %d ,size: %d
+[2019-03-15 17:17:43.518] [basic_logger] [error] thread start cb is null
+[2019-03-15 17:17:43.518] [basic_logger] [error] thread start cb is null
