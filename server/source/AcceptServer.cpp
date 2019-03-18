@@ -65,7 +65,6 @@ int WebSocketWatcher::OnEpollReadableEvent(int &epollfd, epoll_event &event)
 int WebSocketWatcher::OnEpollWriteableEvent(stSocketContext &socket_context)
 {
 	int client_fd = socket_context.fd;
-	std::cout << "send data to client " << std::endl;
 	int ret = send(socket_context.fd, socket_context.stToClient.c_str(), socket_context.stToClient.length(), 0);
 	if (ret < 0)
 	{
@@ -165,7 +164,6 @@ int NormalSocketWatcher::OnEpollReadableEvent(int &epollfd, epoll_event &event)
 int NormalSocketWatcher::OnEpollWriteableEvent(stSocketContext &socket_context)
 {
 	int client_fd = socket_context.fd;
-	std::cout << "send data to client " << std::endl;
 	int ret = send(socket_context.fd, socket_context.stToClient.c_str(), socket_context.stToClient.length(), 0);
 	if (ret < 0)
 	{
