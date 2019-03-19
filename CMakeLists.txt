@@ -7,11 +7,11 @@ aux_source_directory(. DIRSRCS)
 include_directories(./ ./include ./tinyxml ./server ./client ./wepoll/include ./wepoll/src ./wepoll/src/regular ./wepoll/src/combined)
 # Add block directories
 add_subdirectory(tinyxml)
-add_subdirectory(client)
 add_subdirectory(server)
 
 if(MSVC)
 	add_subdirectory(wepoll)
+	add_subdirectory(client)
 endif()
 
 if(CMAKE_COMPILER_IS_GNUCXX)

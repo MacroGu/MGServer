@@ -7,6 +7,7 @@
 
 #include <errno.h>
 #include <string.h>
+#include <sstream>
 #include "ThreadPool.h"
 
 
@@ -113,9 +114,10 @@ void ThreadPool::ReleaseThreadPool()
 		}
 		else
 		{
-			std::thread::id tid = m_thread.get_id();
-			_Thrd_t t = *(_Thrd_t*)(char*)&tid;
-			 LOG_WARN("thread ID: {} can not join ", t._Id);
+			std::stringstream ss;
+			ss << m_thread.get_id();
+			uint64_t id = std::stoull(ss.str());
+			LOG_WARN("thread ID: {} can not join ", id);
 		}
 	}
 
@@ -132,9 +134,10 @@ void ThreadPool::ExecuteThread()
 		// If the thread was woken up to notify process shutdown, return from here
 		if (bThreadPoolRunning == false) 
 		{
-			std::thread::id tid = std::this_thread::get_id();
-			_Thrd_t t = *(_Thrd_t*)(char*)&tid;
-			LOG_WARN("thread ID: {} can not join ", t._Id);
+			std::stringstream ss;
+			ss << std::this_thread::get_id();
+			uint64_t id = std::stoull(ss.str());
+			LOG_WARN("thread ID: {} can not join ", id);
 			return ;
 		}
 
