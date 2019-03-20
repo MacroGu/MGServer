@@ -11,7 +11,7 @@
 
 ServerLog::ServerLog()
 {
-	RotatingLogger = spdlog::rotating_logger_mt("basic_logger", "logs/basic.log", 1024 * 5, 5);
+
 }
 
 
@@ -24,7 +24,7 @@ const std::shared_ptr<spdlog::logger>& ServerLog::GetRotatingLogger()
 {
 	if (!RotatingLogger)
 	{
-		RotatingLogger = spdlog::rotating_logger_mt("basic_logger", "logs/basic.log", 1024 * 5, 5);
+		InitLog();
 	}
 
 	return RotatingLogger;
@@ -33,7 +33,7 @@ const std::shared_ptr<spdlog::logger>& ServerLog::GetRotatingLogger()
 void ServerLog::InitLog()
 {
 	auto LoggerInfo = ServerConf::GetInstance().GetInstance().GetLoggerInfo();
-	if (RotatingLogger == nullptr)
+	if (!RotatingLogger)
 	{
 		RotatingLogger = spdlog::rotating_logger_mt(LoggerInfo->LoggerName, LoggerInfo->LogFilePath, 
 			LoggerInfo->MaxSingleFileSize, LoggerInfo->MaxLogFileNums);

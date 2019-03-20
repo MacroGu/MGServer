@@ -205,6 +205,16 @@ bool CAcceptServer::StartServer()
 		return false;
 	}
 
+	while (true)
+	{
+		LOG_INFO("%@ log info ", SPDLOG_INFO);
+		LOG_DEBUG("%@ LOG DEBUG");
+		LOG_WARN("LOG WARNNING");
+		LOG_ERROR("log error ");
+		std::this_thread::sleep_for(std::chrono::microseconds(1));
+	}
+
+
 // 	WebSocketPool.SetAddressInfo(WS_ADDRESS_INFO_CONFIGURE);
 // 	WebSocketPool.SetSocketWatcher(new WebSocketWatcher());
 // 
