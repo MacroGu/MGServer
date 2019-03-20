@@ -158,7 +158,7 @@ bool ThreadPool::AddTask(Task *task)
 {
 	ThreadsSharedMutex.lock();
 
-    if (TasksNumsLimitSize > 0 && (int) TasksQueue.size() > TasksNumsLimitSize) 
+    if (TasksNumsLimitSize > 0 && TasksQueue.size() > TasksNumsLimitSize) 
 	{
         LOG_WARN("task size reach limit: {}" , TasksNumsLimitSize);
         ThreadsSharedMutex.unlock();

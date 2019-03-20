@@ -68,7 +68,8 @@ int WebSocketWatcher::OnEpollWriteableEvent(stSocketContext &socket_context)
 	int ret = send(socket_context.fd, socket_context.stToClient.c_str(), socket_context.stToClient.length(), 0);
 	if (ret < 0)
 	{
-		LOG_ERROR("send data to client failed ! client IP: %s", socket_context.client_ip.c_str());
+		LOG_ERROR("send data to client failed ! client fd: {}  client IP: {}",
+				client_fd, socket_context.client_ip.c_str());
 	}
 
 	return 0;
@@ -167,7 +168,8 @@ int NormalSocketWatcher::OnEpollWriteableEvent(stSocketContext &socket_context)
 	int ret = send(socket_context.fd, socket_context.stToClient.c_str(), socket_context.stToClient.length(), 0);
 	if (ret < 0)
 	{
-		LOG_ERROR("send data to client failed ! client IP: %s", socket_context.client_ip.c_str());
+		LOG_ERROR("send data to client failed ! client fd:  client IP: {}", 
+				client_fd, socket_context.client_ip.c_str());
 	}
 
 	return 0;

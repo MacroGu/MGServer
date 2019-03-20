@@ -143,7 +143,7 @@ bool CWebSocketStyle::wsDecodeFrame(const WebSocketStreamHeader& header, unsigne
 	memcpy(masks, final_buf + header.mask_offset, 4);
 	memcpy(cbTagData, final_buf + header.mask_offset + 4, header.payload_size);
 
-	for (int i = 0; i < header.payload_size; ++i) {
+	for (unsigned int i = 0; i < header.payload_size; ++i) {
 		cbTagData[i] = (cbTagData[i] ^ masks[i % 4]);
 	}
 	//如果是文本包，在数据最后加一个结束字符“\0”
