@@ -28,8 +28,10 @@ private:
 private:
 
 	friend ISingleton<ServerLog>;
-	friend class std::auto_ptr<ServerLog>;
+	friend class std::unique_ptr<ServerLog>;
 
 	ServerLog();
+
+public:
 	~ServerLog();
 };

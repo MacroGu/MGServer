@@ -60,8 +60,10 @@ private:
 private:
 
 	friend ISingleton<ServerConf>;
-	friend class std::auto_ptr<ServerConf>;
+	friend class std::unique_ptr<ServerConf>;
 
 	ServerConf();
+
+public:
 	~ServerConf();
 };

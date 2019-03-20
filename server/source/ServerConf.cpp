@@ -4,9 +4,6 @@
 	QQ: 877188891
 */
 
-
-#pragma once
-
 #include "ServerConf.h"
 
 ServerConf::ServerConf()

@@ -38,7 +38,7 @@ class ISingleton
 
 		// Use auto_ptr to make sure that the allocated memory for instance
 		// will be released when program exits (after main() ends)
-		static std::auto_ptr<T> s_instance;
+		static std::unique_ptr<T> s_instance;
 	
 	private:
 		ISingleton(const ISingleton&);
@@ -46,4 +46,4 @@ class ISingleton
 };
 
 template <typename T>
-std::auto_ptr<T> ISingleton<T>::s_instance;
+std::unique_ptr<T> ISingleton<T>::s_instance;

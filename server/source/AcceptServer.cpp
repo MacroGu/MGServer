@@ -124,7 +124,7 @@ int NormalSocketWatcher::OnEpollAcceptEvent(stSocketContext &socket_context)
 {
 	int conn_sock = socket_context.fd;
 	std::string clientIP = socket_context.client_ip;
-	LOG_DEBUG("accept client IP: %s, connected fd: %d", clientIP.c_str(), conn_sock);
+	LOG_INFO("accept client IP: %s, connected fd: %d", clientIP.c_str(), conn_sock);
 
 	return 0;
 }
