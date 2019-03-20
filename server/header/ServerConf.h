@@ -8,6 +8,7 @@
 
 #include <memory>
 #include <tinyxml.h>
+#include <stdint.h>
 #include "singleton.h"
 #include "defines.h"
 
@@ -31,28 +32,53 @@ struct stAddressInfo
 	}
 };
 
+// log info
+struct stLoggerInfo
+{
+	std::string LoggerName;
+	std::string LogFilePath;
+	uint32_t MaxSingleFileSize;
+	uint8_t MaxLogFileNums;
+
+	stLoggerInfo()
+	{
+		LoggerName = "";
+		LogFilePath = "";
+		MaxSingleFileSize = 0;
+		MaxLogFileNums = 0;
+	}
+
+};
+
 class ServerConf : public ISingleton<ServerConf>
 {
 
 public:
 	// load all configure by conf file 
-	bool loadConf(const std::string& serverKind);
+	bool LoadServerConf();
 	// if load conf file right return true
 	bool hasLoadConfRight();
 	// get websocket address info configuration
 	const stAddressInfo& GetWSAddressInfoConfiguration();
 	// get normal socket addresss info configuration
 	const stAddressInfo& GetNSAddressInfoConfiguration();
+	// get log configuration
+	std::shared_ptr<stLoggerInfo> GetLoggerInfo();
 
 protected:
 	// load local server configure
 	bool LoadServerInfo(const std::string& fileDir, const std::string& addressInfo);
+	// load log configure
+	bool LoadLogInfo(const std::string& FilePath);
 
 private:
 	// WebSocket address info
 	stAddressInfo webSocketInfo;
 	// normal socket address info
 	stAddressInfo normalSocketInfo;
+	// log configuration
+	std::shared_ptr<stLoggerInfo> LoggerInfo;
+
 
 	// if all configuration has be loaded right
 	bool bAllConfLoadedRight;

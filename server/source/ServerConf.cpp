@@ -5,26 +5,40 @@
 */
 
 #include "ServerConf.h"
+#include <iostream>
 
 ServerConf::ServerConf()
 {
 	bAllConfLoadedRight = true;
+	LoggerInfo = std::make_shared<stLoggerInfo>();
 }
 
 ServerConf::~ServerConf()
 {
-
 }
 
 
-bool ServerConf::loadConf(const std::string& serverKind)
+bool ServerConf::LoadServerConf()
 {
-	if (!LoadServerInfo(SERVER_CONF_PATH, serverKind))
+	if (!LoadServerInfo(SERVER_CONF_PATH, WEBSOCKET_ADDRESS_INFO))
 	{
-		LOG_ERROR("load local server configuration failed! ");
+		std::cout <<"file: " << __FILE__ <<" line: " <<  __LINE__ << "  load local server configuration failed! WEBSOCKET_ADDRESS_INFO" << std::endl;
 		return false;
 	}
 
+	if (!LoadServerInfo(SERVER_CONF_PATH, NORMALSOCKET_ADDRESS_INFO))
+	{
+		std::cout <<"file: " << __FILE__ <<" line: " <<  __LINE__ << "  load local server configuration failed! NORMALSOCKET_ADDRESS_INFO" << std::endl;
+		return false;
+	}
+
+	if (!LoadLogInfo(SERVER_CONF_PATH))
+	{
+		std::cout <<"file: " << __FILE__ <<" line: " <<  __LINE__ << "  load log info configuration failed! " << std::endl;
+		return false;
+	}
+
+	std::cout <<"file: " << __FILE__ <<" line: " <<  __LINE__ << "  load server configuration successfully!" << std::endl;
 	return true;
 }
 
@@ -43,26 +57,31 @@ const stAddressInfo& ServerConf::GetNSAddressInfoConfiguration()
 	return normalSocketInfo;
 }
 
+std::shared_ptr<stLoggerInfo> ServerConf::GetLoggerInfo()
+{
+	return LoggerInfo;
+}
+
 bool ServerConf::LoadServerInfo(const std::string& fileDir, const std::string& addressInfo)
 {
 	TiXmlDocument doc;
 	if (!doc.LoadFile(fileDir.c_str()))
 	{
-		LOG_ERROR("load file:{} error:{}", fileDir.c_str(), doc.ErrorDesc());
+		std::cout <<"file: " << __FILE__ <<" line: " <<  __LINE__ << "  load log info configuration failed! " << fileDir.c_str()<< " error:" << doc.ErrorDesc() << std::endl;
 		return false;
 	}
 
 	TiXmlElement* server = doc.FirstChildElement();
 	if (server == nullptr)
 	{
-		LOG_ERROR("can not find root in xml!");
+		std::cout <<"file: " << __FILE__ <<" line: " <<  __LINE__ << "  can not find root in xml!" << std::endl;
 		return false;
 	}
 
 	TiXmlElement* m_serverInfo = server->FirstChildElement(addressInfo.c_str());
 	if (m_serverInfo == nullptr)
 	{
-		LOG_ERROR("can not find local server info xml attribute!");
+		std::cout <<"file: " << __FILE__ <<" line: " <<  __LINE__ << "  can not find local server info xml attribute!" << std::endl;
 		return false;
 	}
 
@@ -77,7 +96,7 @@ bool ServerConf::LoadServerInfo(const std::string& fileDir, const std::string& a
 	}
 	else
 	{
-		LOG_ERROR("address info is wrong!");
+		std::cout <<"file: " << __FILE__ <<" line: " <<  __LINE__ << "  address info is wrong!" << std::endl;
 		return false;
 	}
 	
@@ -110,7 +129,64 @@ bool ServerConf::LoadServerInfo(const std::string& fileDir, const std::string& a
 		}
 		else
 		{
-			LOG_ERROR("server info conf type:{} value:{}" ,type, value);
+			std::cout <<"file: " << __FILE__ <<" line: " <<  __LINE__ << "  server info conf type: " << type<< " value: " << value << std::endl;
+			doc.Clear();
+			return false;
+		}
+	}
+
+	doc.Clear();
+	return true;
+}
+
+bool ServerConf::LoadLogInfo(const std::string& FilePath)
+{
+	TiXmlDocument doc;
+	if (!doc.LoadFile(FilePath.c_str()))
+	{
+		std::cout <<"file: " << __FILE__ <<" line: " <<  __LINE__ << "  load file: " << FilePath << " error: " << doc.ErrorDesc() << std::endl;
+		return false;
+	}
+
+	TiXmlElement* server = doc.FirstChildElement();
+	if (server == nullptr)
+	{
+		std::cout <<"file: " << __FILE__ <<" line: " <<  __LINE__ << "  can not find root in xml!" << std::endl;
+		return false;
+	}
+
+	TiXmlElement* LogInfo = server->FirstChildElement("loggerinfo");
+	if (LogInfo == nullptr)
+	{
+		std::cout << "file: " << __FILE__ <<" line: " <<  __LINE__ << "  can not find loggerinfo info xml attribute " << std::endl;
+		return false;
+	}
+
+	for (TiXmlElement* m_serverInfoValue = LogInfo->FirstChildElement("value");
+		m_serverInfoValue != nullptr; m_serverInfoValue = m_serverInfoValue->NextSiblingElement())
+	{
+		const char* type = m_serverInfoValue->Attribute("type");
+		const char* value = m_serverInfoValue->Attribute("value");
+
+		if (strcmp(type, "LoggerName") == 0)
+		{
+			LoggerInfo->LoggerName = value;
+		}
+		else if (strcmp(type, "LogFilePath") == 0)
+		{
+			LoggerInfo->LogFilePath = value;
+		}
+		else if (strcmp(type, "MaxSingleFileSize") == 0)
+		{
+			LoggerInfo->MaxSingleFileSize = atoi(value);
+		}
+		else if (strcmp(type, "MaxLogFileNums") == 0)
+		{
+			LoggerInfo->MaxLogFileNums = atoi(value);
+		}
+		else
+		{
+			std::cout <<"file: " << __FILE__ <<" line: " <<  __LINE__ << "  log info conf type: " << type << " value: " << value << std::endl;
 			doc.Clear();
 			return false;
 		}

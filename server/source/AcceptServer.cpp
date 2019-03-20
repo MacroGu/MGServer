@@ -199,15 +199,9 @@ CAcceptServer::~CAcceptServer()
 
 bool CAcceptServer::StartServer()
 {
-	if (!ServerConf::GetInstance().loadConf(WEBSOCKET_ADDRESS_INFO))
+	if (!ServerConf::GetInstance().LoadServerConf())
 	{
 		LOG_ERROR("websocket address info configure file read failed!");
-		return false;
-	}
-
-	if (!ServerConf::GetInstance().loadConf(NORMALSOCKET_ADDRESS_INFO))
-	{
-		LOG_ERROR("normal socket address info configure file read failed!");
 		return false;
 	}
 

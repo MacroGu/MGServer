@@ -3,9 +3,9 @@
 	email: macrogu@qq.com
 	QQ: 877188891
 */
-
 #include "ServerLog.h"
 #include "spdlog/sinks/rotating_file_sink.h"
+#include "ServerConf.h"
 
 
 
@@ -28,4 +28,15 @@ const std::shared_ptr<spdlog::logger>& ServerLog::GetRotatingLogger()
 	}
 
 	return RotatingLogger;
+}
+
+void ServerLog::InitLog()
+{
+	auto LoggerInfo = ServerConf::GetInstance().GetInstance().GetLoggerInfo();
+	if (RotatingLogger == nullptr)
+	{
+		RotatingLogger = spdlog::rotating_logger_mt(LoggerInfo->LoggerName, LoggerInfo->LogFilePath, 
+			LoggerInfo->MaxSingleFileSize, LoggerInfo->MaxLogFileNums);
+	}
+
 }

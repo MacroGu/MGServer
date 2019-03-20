@@ -22,6 +22,9 @@ public:
 	// Get Rotating logger
 	const std::shared_ptr<spdlog::logger>& GetRotatingLogger();
 
+	// initialize log module
+	void InitLog();
+
 private:
 	std::shared_ptr<spdlog::logger> RotatingLogger;
 
