@@ -201,22 +201,11 @@ bool CAcceptServer::StartServer()
 {
 	if (!ServerConf::GetInstance().LoadServerConf())
 	{
-		LOG_ERROR("websocket address info configure file read failed!");
+		LOG_ERROR("load server info configure file read failed!");
 		return false;
 	}
 
-	while (true)
-	{
-		int a = 1;
-		LOG_INFO("Hello World!  {}", a);
-		LOG_DEBUG("LOG DEBUG {}", a);
-		LOG_WARN("LOG WARNNING {}", a);
-		LOG_ERROR("log error {}", a);
-		LOG_CRITICAL(" aa  {}", a);
-
-		std::this_thread::sleep_for(std::chrono::microseconds(1));
-	}
-
+	LOG_INFO("load server configuration successfully! ");
 
 // 	WebSocketPool.SetAddressInfo(WS_ADDRESS_INFO_CONFIGURE);
 // 	WebSocketPool.SetSocketWatcher(new WebSocketWatcher());
