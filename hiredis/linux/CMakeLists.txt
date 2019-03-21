@@ -1,0 +1,74 @@
+CMAKE_MINIMUM_REQUIRED(VERSION 3.0.0)
+INCLUDE(GNUInstallDirs)
+PROJECT(hiredis)
+
+OPTION(HIREDIS_SSL "Link against OpenSSL" OFF)
+
+MACRO(getVersionBit name)
+  SET(VERSION_REGEX "^#define ${name} (.+)$")
+  FILE(STRINGS "${CMAKE_CURRENT_SOURCE_DIR}/hiredis.h"
+    VERSION_BIT REGEX ${VERSION_REGEX})
+  STRING(REGEX REPLACE ${VERSION_REGEX} "\\1" ${name} "${VERSION_BIT}")
+ENDMACRO(getVersionBit)
+
+getVersionBit(HIREDIS_MAJOR)
+getVersionBit(HIREDIS_MINOR)
+getVersionBit(HIREDIS_PATCH)
+getVersionBit(HIREDIS_SONAME)
+SET(VERSION "${HIREDIS_MAJOR}.${HIREDIS_MINOR}.${HIREDIS_PATCH}")
+MESSAGE("Detected version: ${VERSION}")
+
+PROJECT(hiredis VERSION "${VERSION}")
+
+SET(ENABLE_EXAMPLES OFF CACHE BOOL "Enable building hiredis examples")
+
+INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR})
+
+ADD_LIBRARY(hiredis SHARED
+    async.c
+    dict.c
+    hiredis.c
+    net.c
+    read.c
+    sds.c
+    sslio.c)
+
+SET_TARGET_PROPERTIES(hiredis
+    PROPERTIES
+    VERSION "${HIREDIS_SONAME}")
+
+CONFIGURE_FILE(hiredis.pc.in hiredis.pc @ONLY)
+
+INSTALL(TARGETS hiredis
+    DESTINATION "${CMAKE_INSTALL_LIBDIR}")
+
+INSTALL(FILES hiredis.h read.h sds.h async.h
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/hiredis)
+
+INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/hiredis.pc
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
+
+IF(HIREDIS_SSL)
+    IF (NOT OPENSSL_ROOT_DIR)
+        IF (APPLE)
+            SET(OPENSSL_ROOT_DIR "/usr/local/opt/openssl")
+        ENDIF()
+    ENDIF()
+    FIND_PACKAGE(OpenSSL REQUIRED)
+    ADD_DEFINITIONS(-DHIREDIS_SSL)
+    INCLUDE_DIRECTORIES("${OPENSSL_INCLUDE_DIR}")
+    TARGET_LINK_LIBRARIES(hiredis ${OPENSSL_LIBRARIES})
+ENDIF()
+
+ENABLE_TESTING()
+ADD_EXECUTABLE(hiredis-test test.c)
+
+
+TARGET_LINK_LIBRARIES(hiredis-test hiredis)
+ADD_TEST(NAME hiredis-test
+    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/test.sh)
+
+# Add examples
+IF(ENABLE_EXAMPLES)
+  ADD_SUBDIRECTORY(examples)
+ENDIF(ENABLE_EXAMPLES)

@@ -1,0 +1,58 @@
+language: c
+sudo: false
+compiler:
+  - gcc
+  - clang
+
+os:
+  - linux
+  - osx
+
+before_script:
+    - if [ "$TRAVIS_OS_NAME" == "osx" ] ; then brew update; brew install redis; fi
+
+addons:
+  apt:
+    packages:
+    - libc6-dbg
+    - libc6-dev
+    - libc6:i386
+    - libc6-dev-i386
+    - libc6-dbg:i386
+    - gcc-multilib
+    - g++-multilib
+    - valgrind
+
+env:
+  - BITS="32"
+  - BITS="64"
+
+script:
+  - EXTRA_CMAKE_OPTS="-DENABLE_EXAMPLES:BOOL=ON -DHIREDIS_SSL:BOOL=ON";
+    if [ "$TRAVIS_OS_NAME" == "osx" ]; then
+      if [ "$BITS" == "32" ]; then
+        CFLAGS="-m32 -Werror";
+        CXXFLAGS="-m32 -Werror";
+        LDFLAGS="-m32";
+        EXTRA_CMAKE_OPTS=;
+      else
+        CFLAGS="-Werror";
+        CXXFLAGS="-Werror";
+      fi;
+    else
+      TEST_PREFIX="valgrind --track-origins=yes --leak-check=full";
+      if [ "$BITS" == "32" ]; then
+        CFLAGS="-m32 -Werror";
+        CXXFLAGS="-m32 -Werror";
+        LDFLAGS="-m32";
+        EXTRA_CMAKE_OPTS=;
+      else
+        CFLAGS="-Werror";
+        CXXFLAGS="-Werror";
+      fi;
+    fi;
+    export CFLAGS CXXFLAGS LDFLAGS TEST_PREFIX EXTRA_CMAKE_OPTS
+  - mkdir build/ && cd build/
+  - cmake .. ${EXTRA_CMAKE_OPTS}
+  - make VERBOSE=1
+  - ctest -V
