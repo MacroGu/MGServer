@@ -31,4 +31,9 @@
 		<value type="MaxLogFileNums" value="10" />		<!-- 单服务器最大日志文件数量为 10个 -->
 	</loggerinfo>
 	
+	<redisInfo>		
+		<value type="redisAddress" value="127.0.0.1" />
+		<value type="redisPort" value="6379" />
+	</redisInfo>	
+	
 </server>

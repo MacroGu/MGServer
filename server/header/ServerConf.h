@@ -50,6 +50,20 @@ struct stLoggerInfo
 
 };
 
+// redis info
+struct stRedisInfo
+{
+	std::string redisAddress;
+	uint32_t redisPort;
+
+	stRedisInfo()
+	{
+		redisAddress = "";
+		redisPort = 0;
+	}
+
+};
+
 class ServerConf : public ISingleton<ServerConf>
 {
 
@@ -64,12 +78,16 @@ public:
 	const stAddressInfo& GetNSAddressInfoConfiguration();
 	// get log configuration
 	std::shared_ptr<stLoggerInfo> GetLoggerInfo();
+	// get redis configuration
+	std::shared_ptr<stRedisInfo> GetRedisInfo();
 
 protected:
 	// load local server configure
 	bool LoadServerInfo(const std::string& fileDir, const std::string& addressInfo);
 	// load log configure
 	bool LoadLogInfo(const std::string& FilePath);
+	// load redis configure
+	bool LoadRedisInfo(const std::string& FilePath);
 
 private:
 	// WebSocket address info
@@ -78,6 +96,8 @@ private:
 	stAddressInfo normalSocketInfo;
 	// log configuration
 	std::shared_ptr<stLoggerInfo> LoggerInfo;
+	// redis configuration
+	std::shared_ptr<stRedisInfo> RedisInfo;
 
 
 	// if all configuration has be loaded right

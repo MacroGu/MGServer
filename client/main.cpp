@@ -139,8 +139,13 @@ int  main(int argc, char ** argv) {
 
 
 
-	WSADATA wsa;
-	WSAStartup(MAKEWORD(1, 1), &wsa); //initial Ws2_32.dll by a process  
+	WORD version = MAKEWORD(2, 2);
+	WSADATA data;
+
+	if (WSAStartup(version, &data) != 0) {
+		std::cerr << "WSAStartup() failure" << std::endl;
+		return -1;
+	}
 
 	std::vector<std::thread> allThreads;
 	for (int i = 0; i < 2; i++)
