@@ -10,6 +10,8 @@
 #include "AcceptServer.h"
 #include "protocol.h"
 #include "ServerConf.h"
+#include "hiredis.h"
+
 
 WebSocketWatcher::WebSocketWatcher()
 {
@@ -211,6 +213,13 @@ bool CAcceptServer::StartServer()
 // 	WebSocketPool.SetSocketWatcher(new WebSocketWatcher());
 // 
 // 	if (!WebSocketPool.StartEpoll()) return false;
+
+	struct timeval timeout = { 1, 500000 }; // 1.5 seconds
+	auto c = redisConnectWithTimeout((char*)"127.0.0.1", 6379, timeout);
+	if (c->err) {
+		printf("Connection error: %s\n", c->errstr);
+		exit(1);
+	}
 
 	NormalSocketPool.SetAddressInfo(NS_ADDRESS_INFO_CONFIGURE);
 	NormalSocketPool.SetSocketWatcher(new NormalSocketWatcher());

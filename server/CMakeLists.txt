@@ -41,7 +41,7 @@ add_executable(server
     ${SOURCE_FILES}
 )
 if(MSVC)
-	target_link_libraries(server tinyxml wepoll)
+	target_link_libraries(server tinyxml wepoll hiredis)
 	ADD_DEFINITIONS(-D_CRT_SECURE_NO_WARNINGS -D_CRT_SECURE_NO_WARNINGS -D_WINSOCK_DEPRECATED_NO_WARNINGS)
 endif()
 target_link_libraries(server tinyxml)
