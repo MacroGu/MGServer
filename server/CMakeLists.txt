@@ -44,7 +44,7 @@ if(MSVC)
 	target_link_libraries(server tinyxml wepoll hiredis)
 	ADD_DEFINITIONS(-D_CRT_SECURE_NO_WARNINGS -D_CRT_SECURE_NO_WARNINGS -D_WINSOCK_DEPRECATED_NO_WARNINGS)
 endif()
-target_link_libraries(server tinyxml)
+target_link_libraries(server tinyxml hiredis)
 
 if(CMAKE_COMPILER_IS_GNUCXX)
 	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -pthread -std=c++11")
