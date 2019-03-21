@@ -11,10 +11,16 @@
 #include "ServerConf.h"
 
 // log
-#define LOG_INFO	ServerLog::GetInstance().GetInstance().GetRotatingLogger()->info
-#define LOG_ERROR	ServerLog::GetInstance().GetInstance().GetRotatingLogger()->error
-#define LOG_DEBUG	ServerLog::GetInstance().GetInstance().GetRotatingLogger()->debug
-#define LOG_WARN	ServerLog::GetInstance().GetInstance().GetRotatingLogger()->warn
+#define LOG_INFO(fmt, ...) \
+		ServerLog::GetInstance().GetInstance().GetRotatingLogger()->info("{}: {}  "##fmt, __FUNCTION__, __LINE__, ##__VA_ARGS__)
+#define LOG_ERROR(fmt, ...) \
+		ServerLog::GetInstance().GetInstance().GetRotatingLogger()->error("{}: {}  "##fmt, __FUNCTION__, __LINE__, ##__VA_ARGS__)
+#define LOG_DEBUG(fmt, ...) \
+		ServerLog::GetInstance().GetInstance().GetRotatingLogger()->debug("{}: {}  "##fmt, __FUNCTION__, __LINE__, ##__VA_ARGS__)
+#define LOG_WARN(fmt, ...) \
+		ServerLog::GetInstance().GetInstance().GetRotatingLogger()->warn("{}: {}  "##fmt, __FUNCTION__, __LINE__, ##__VA_ARGS__)
+#define LOG_CRITICAL(fmt, ...) \
+		ServerLog::GetInstance().GetInstance().GetRotatingLogger()->critical("{}: {}  "##fmt, __FUNCTION__, __LINE__, ##__VA_ARGS__)
 
 
 // conf

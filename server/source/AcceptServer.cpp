@@ -207,10 +207,13 @@ bool CAcceptServer::StartServer()
 
 	while (true)
 	{
-		LOG_INFO("%@ log info ", SPDLOG_INFO);
-		LOG_DEBUG("%@ LOG DEBUG");
-		LOG_WARN("LOG WARNNING");
-		LOG_ERROR("log error ");
+		int a = 1;
+		LOG_INFO("Hello World!  {}", a);
+		LOG_DEBUG("LOG DEBUG {}", a);
+		LOG_WARN("LOG WARNNING {}", a);
+		LOG_ERROR("log error {}", a);
+		LOG_CRITICAL(" aa  {}", a);
+
 		std::this_thread::sleep_for(std::chrono::microseconds(1));
 	}
 
