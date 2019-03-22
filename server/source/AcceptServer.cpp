@@ -27,7 +27,7 @@ int WebSocketWatcher::OnEpollAcceptEvent(stSocketContext &socket_context)
 {
 	int conn_sock = socket_context.fd;
 	std::string clientIP = socket_context.client_ip;
-	LOG_DEBUG("accept client IP: %s, connected fd: %d" , clientIP.c_str() , conn_sock);
+	LOG_DEBUG("accept client IP: {}, connected fd: {}" , clientIP , conn_sock);
 
 	return 0;
 }
@@ -36,7 +36,7 @@ int WebSocketWatcher::OnEpollReadableEvent(int &epollfd, epoll_event &event)
 {
 	if (event.data.ptr == nullptr)
 	{
-		LOG_ERROR("event.data.ptr is nullptr , epollfd: %d" , epollfd);
+		LOG_ERROR("event.data.ptr is nullptr , epollfd: {}" , epollfd);
 		return false;
 	}
 
@@ -74,7 +74,7 @@ int WebSocketWatcher::OnEpollWriteableEvent(stSocketContext &socket_context)
 				client_fd, socket_context.client_ip.c_str());
 	}
 
-	return 0;
+	return WRITE_CONN_ALIVE;
 }
 
 int WebSocketWatcher::OnEpollCloseEvent(stSocketContext &socket_context)
@@ -88,11 +88,11 @@ bool WebSocketWatcher::HandleClientWebSocketData(stSocketContext *socket_context
 {
 	if (socket_context == nullptr)
 	{
-		LOG_ERROR("epoll_context is nullptr , dataLength: %d" , dataLength);
+		LOG_ERROR("epoll_context is nullptr , dataLength: {}" , dataLength);
 		return false;
 	}
 
-	LOG_INFO("get client message ID: %d ,size: %d" , socket_context->uiMessageID , dataLength);
+	LOG_INFO("get client message ID: {} ,size: {}" , socket_context->uiMessageID , dataLength);
 
 	std::string tempData = clientData;
 	bool isWS = webSocketStyle.isWSHandShake(tempData);
@@ -127,7 +127,7 @@ int NormalSocketWatcher::OnEpollAcceptEvent(stSocketContext &socket_context)
 {
 	int conn_sock = socket_context.fd;
 	std::string clientIP = socket_context.client_ip;
-	LOG_INFO("accept client IP: %s, connected fd: %d", clientIP.c_str(), conn_sock);
+	LOG_INFO("accept client IP: {}, connected fd: {}", clientIP, conn_sock);
 
 	return 0;
 }
@@ -136,7 +136,7 @@ int NormalSocketWatcher::OnEpollReadableEvent(int &epollfd, epoll_event &event)
 {
 	if (event.data.ptr == nullptr)
 	{
-		LOG_ERROR("event.data.ptr is nullptr , epollfd: %d", epollfd);
+		LOG_ERROR("event.data.ptr is nullptr , epollfd: {}", epollfd);
 		return false;
 	}
 
@@ -171,15 +171,15 @@ int NormalSocketWatcher::OnEpollWriteableEvent(stSocketContext &socket_context)
 	if (ret < 0)
 	{
 		LOG_ERROR("send data to client failed ! client fd:  client IP: {}", 
-				client_fd, socket_context.client_ip.c_str());
+				client_fd, socket_context.client_ip);
 	}
 
-	return 0;
+	return WRITE_CONN_ALIVE;
 }
 
 int NormalSocketWatcher::OnEpollCloseEvent(stSocketContext &socket_context)
 {
-	LOG_DEBUG("close client client ip: %s client fd: %d", socket_context.client_ip.c_str(), socket_context.fd);
+	LOG_DEBUG("close client client ip: {} client fd: {}", socket_context.client_ip, socket_context.fd);
 
 	return 0;
 }
@@ -196,7 +196,8 @@ CAcceptServer::CAcceptServer()
 
 CAcceptServer::~CAcceptServer()
 {
-	WebSocketPool.StopEpoll();
+	// WebSocketPool.StopEpoll();
+	NormalSocketPool.StopEpoll();
 }
 
 bool CAcceptServer::StartServer()

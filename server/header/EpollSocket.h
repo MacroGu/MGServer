@@ -23,17 +23,6 @@
 #include "ThreadPool.h"
 #include "defines.h"
 
-#define SS_WRITE_BUFFER_SIZE 4096
-#define SS_READ_BUFFER_SIZE 4096
-
-#define WRITE_CONN_ALIVE 0
-#define WRITE_CONN_CLOSE 1
-#define WRITE_CONN_CONTINUE 2
-
-#define READ_OVER 0
-#define READ_CONTINUE 1
-#define READ_CLOSE -1
-
 
 struct stSocketContext 			// some connected clients info
 {
@@ -77,11 +66,10 @@ class SocketWatcher
 
 };
 
-enum eEpollSocketStatus
+enum eEpollStatus
 {
-    S_RUN = 0,
-    S_REJECT_CONN = 1,
-    S_STOP = 2
+	EPOLL_RUNNING = 0,
+	EPOLL_STOPPED
 };
 
 class EpollSocket 
@@ -111,6 +99,8 @@ private:
 
         void StartEpollEventLoop();
 
+		void ReadTaskInThreads(void* data);
+
 		stAddressInfo AddressInfo;
 
 		SocketWatcher* Watcher;
@@ -122,17 +112,9 @@ private:
 #endif
 		int ListenedSocket;
 
-		// 所有的客户端共享的互斥锁
-		std::mutex AllClientsSharedMutex; 
-
-		// 链接本epoll 的客户端的总数
-        uint32_t ClientTotalNums;
-        
         ThreadPool *ThreadPoolPtr;
-        
-		eEpollSocketStatus EpollSocketStatus;
 
-		void ReadTaskInThreads(void* data);
+		eEpollStatus EpollStatus;
 public:
 
         EpollSocket();

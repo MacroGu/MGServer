@@ -27,10 +27,9 @@
 EpollSocket::EpollSocket() 
 {
     ThreadPoolPtr = NULL;
-    EpollSocketStatus = S_RUN;
-    ClientTotalNums = 0;
 	ListenedSocket = 0;
 	Watcher = nullptr;
+	EpollStatus = EPOLL_RUNNING;
 #ifdef _WIN32
 	_epollfd = INVALID_HANDLE_VALUE;
 	WSADATA wsadata;
@@ -71,7 +70,7 @@ bool EpollSocket::BindOnAddress(const stAddressInfo& addressInfo)
     ListenedSocket = socket(AF_INET, SOCK_STREAM, 0);
     if (ListenedSocket == -1)
 	{
-        LOG_ERROR("socket error: %s" , strerror(errno));
+        LOG_ERROR("socket error: {}" , strerror(errno));
         return false;
     }
     int opt = 1;
@@ -95,12 +94,12 @@ bool EpollSocket::BindOnAddress(const stAddressInfo& addressInfo)
 
     if (bind(ListenedSocket, (struct sockaddr *) &my_addr, sizeof(struct sockaddr)) == -1)
 	{
-        LOG_ERROR("bind error: %s" , strerror(errno));
+        LOG_ERROR("bind error: {}" , strerror(errno));
         return false;
     }
     if (listen(ListenedSocket, addressInfo.backlog) == -1)
 	{
-        LOG_ERROR("listen error: %s" , strerror(errno));
+        LOG_ERROR("listen error: {}" , strerror(errno));
         return false;
     }
 
@@ -115,12 +114,12 @@ int EpollSocket::AcceptConnectSocket(int sockfd, std::string &client_ip)
 
     if ((new_fd = accept(sockfd, (struct sockaddr *) &their_addr, &sin_size)) == -1) 
 	{
-        LOG_ERROR("accept error: %s" , strerror(errno));
+        LOG_ERROR("accept error: {}" , strerror(errno));
         return -1;
     }
 
     client_ip = inet_ntoa(their_addr.sin_addr);
-    LOG_DEBUG("server: got connection from %s" ,  client_ip.c_str());
+    LOG_DEBUG("server: got connection from {}" ,  client_ip.c_str());
     return new_fd;
 }
 
@@ -141,10 +140,7 @@ void EpollSocket::HandleAcceptEvent(int &epollfd, epoll_event &event, SocketWatc
 		return;
 	}
 
-	AllClientsSharedMutex.lock();
-    ClientTotalNums++;
-	AllClientsSharedMutex.unlock();
-    LOG_DEBUG("get accept socket which listen fd: %d, conn_sock_fd: %d" , sockfd , conn_sock);
+    LOG_DEBUG("get accept socket which listen fd: {}, conn_sock_fd: {}" , sockfd , conn_sock);
 
     stSocketContext *socket_context = new stSocketContext();
     socket_context->fd = conn_sock;
@@ -158,7 +154,7 @@ void EpollSocket::HandleAcceptEvent(int &epollfd, epoll_event &event, SocketWatc
 
     if (epoll_ctl(_epollfd, EPOLL_CTL_ADD, conn_sock, &conn_sock_ev) == -1) 
 	{
-        LOG_ERROR("epoll_ctl: conn_sock: %s" , strerror(errno));
+        LOG_ERROR("epoll_ctl: conn_sock: {}" , strerror(errno));
         CloseAndReleaseOneEvent(event);
 		return;
 	}
@@ -194,7 +190,7 @@ void EpollSocket::HandleEpollReadableEvent(epoll_event &event)
         epoll_ctl(_epollfd, EPOLL_CTL_MOD, fd, &event);
     } else 
 	{
-        LOG_ERROR("Unknown read ret: %d" ,  ret);
+        LOG_ERROR("Unknown read ret: {}" ,  ret);
 		return;
     }
 }
@@ -217,16 +213,12 @@ void EpollSocket::HandleWriteableEvent(int &epollfd, epoll_event &event, SocketW
     } 
 	else if (ret == WRITE_CONN_ALIVE) 
 	{
-        if (EpollSocketStatus == S_REJECT_CONN) 
-		{
-            return CloseAndReleaseOneEvent(event);
-        }
         // wait for next request
         event.events = EPOLLIN | EPOLLONESHOT;
     } 
 	else 
 	{
-        LOG_ERROR("Unknown write ret: %d" , ret);
+        LOG_ERROR("Unknown write ret: {}" , ret);
     }
 #ifndef _WIN32
 	epoll_ctl(epollfd, EPOLL_CTL_MOD, fd, &event);
@@ -281,7 +273,7 @@ bool EpollSocket::AddListenSocketToEpoll()
 	ev.data.fd = ListenedSocket;
 	if (epoll_ctl(_epollfd, EPOLL_CTL_ADD, ListenedSocket, &ev) == -1)
 	{
-		LOG_ERROR("epoll_ctl: listen_sock: %s", strerror(errno));
+		LOG_ERROR("epoll_ctl: listen_sock: {}", strerror(errno));
 		return false;
 	}
 
@@ -293,21 +285,7 @@ void EpollSocket::HandleEpollEvent(epoll_event &e)
     if (e.data.fd == ListenedSocket)		// 仅仅建立连接的时候进行判断，因为只有此时fd才和server 的监听fd 相等
 	{
         // accept connection
-        if (EpollSocketStatus == S_RUN) 
-		{
-            this->HandleAcceptEvent((int&)_epollfd, e, *Watcher);
-        } 
-		else 
-		{
-            LOG_INFO("current status: %s , not accept new connect" , EpollSocketStatus);
-			AllClientsSharedMutex.lock();
-            if (ClientTotalNums == 0 && EpollSocketStatus == S_REJECT_CONN) 
-			{
-                EpollSocketStatus = S_STOP;
-                LOG_INFO("client is empty and ready for stop server!");
-            }
-			AllClientsSharedMutex.unlock();
-        }
+		this->HandleAcceptEvent((int&)_epollfd, e, *Watcher);
     } 
 	else if (e.events & EPOLLIN) 
 	{
@@ -333,7 +311,7 @@ void EpollSocket::HandleEpollEvent(epoll_event &e)
     } 
 	else 
 	{
-		LOG_WARN("unknown events : %d" , e.events);
+		LOG_WARN("unknown events : {}" , e.events);
     }
 }
 
@@ -348,7 +326,7 @@ bool EpollSocket::CreateEpoll()
     if (_epollfd == -1) 
 #endif
 	{
-		LOG_ERROR("epoll_create: %s", strerror(errno));
+		LOG_ERROR("epoll_create: {}", strerror(errno));
 		return false;
 	}
 
@@ -371,7 +349,7 @@ bool EpollSocket::StartThreadPool()
 void EpollSocket::StartEpollEventLoop() 
 {
     epoll_event *events = new epoll_event[AddressInfo.maxEvents];
-    while (EpollSocketStatus != S_STOP) 
+    while (EpollStatus != EPOLL_STOPPED)
 	{
         int fds_num = epoll_wait(_epollfd, events, AddressInfo.maxEvents, -1);
         if (fds_num == -1) 
@@ -380,7 +358,7 @@ void EpollSocket::StartEpollEventLoop()
 			{ /*The call was interrupted by a signal handler*/
                 continue;
             }
-            LOG_ERROR("epoll_wait error: %s" , strerror(errno));
+            LOG_ERROR("epoll_wait error: {}" , strerror(errno));
             break;
         }
 
@@ -388,6 +366,8 @@ void EpollSocket::StartEpollEventLoop()
 		{
             this->HandleEpollEvent(events[i]);
         }
+
+		// 可设置服务器单帧时间等
     }
     LOG_INFO("epoll wait loop stop ...");
     if (events != NULL) 
@@ -420,7 +400,7 @@ bool EpollSocket::StartEpoll()
 
 	if (!ret)
 	{
-		LOG_ERROR("error : %d", ret);
+		LOG_ERROR("error : {}", ret);
 		return ret;
 	}
 
@@ -430,8 +410,8 @@ bool EpollSocket::StartEpoll()
 
 void EpollSocket::StopEpoll() 
 {
-    EpollSocketStatus = S_REJECT_CONN;
-    LOG_INFO("stop epoll , current clients: %d" , ClientTotalNums);
+	EpollStatus = EPOLL_STOPPED;
+    LOG_INFO("stop epoll " );
 }
 
 void EpollSocket::CloseAndReleaseOneEvent(epoll_event &epoll_event) 
@@ -458,19 +438,9 @@ void EpollSocket::CloseAndReleaseOneEvent(epoll_event &epoll_event)
 	int ret = closesocket(fd);
 #endif
 
-	AllClientsSharedMutex.lock();
-    ClientTotalNums--;
-    if (ClientTotalNums == 0 && EpollSocketStatus == S_REJECT_CONN) 
-	{
-        EpollSocketStatus = S_STOP;
-        LOG_INFO("client is empty and ready for stop server!");
-    }
-	AllClientsSharedMutex.unlock();
-
 	if (ret != 0)
 	{
 		LOG_ERROR("connect close complete which fd: {}, ret: {}", fd, ret);
 		return;
 	}
-
 }
