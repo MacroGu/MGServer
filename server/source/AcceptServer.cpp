@@ -10,7 +10,7 @@
 #include "AcceptServer.h"
 #include "protocol.h"
 #include "ServerConf.h"
-#include "hiredis.h"
+#include "RedisHandle.h"
 
 
 WebSocketWatcher::WebSocketWatcher()
@@ -206,19 +206,49 @@ bool CAcceptServer::StartServer()
 		LOG_ERROR("load server info configure file read failed!");
 		return false;
 	}
+	else
+	{
+		LOG_INFO("load server configuration successfully! ");
+	}
 
-	LOG_INFO("load server configuration successfully! ");
+	if (!RedisHandle::GetInstance().Init())
+	{
+		LOG_ERROR("init redis failed!");
+		return false;
+	}
 
 // 	WebSocketPool.SetAddressInfo(WS_ADDRESS_INFO_CONFIGURE);
 // 	WebSocketPool.SetSocketWatcher(new WebSocketWatcher());
 // 
 // 	if (!WebSocketPool.StartEpoll()) return false;
 
-	struct timeval timeout = { 1, 500000 }; // 1.5 seconds
-	auto c = redisConnectWithTimeout((char*)"127.0.0.1", 6379, timeout);
-	if (c->err) {
-		printf("Connection error: %s\n", c->errstr);
-		exit(1);
+	uint64_t RedisValue = 0;
+	uint32_t RedisKey = 0;
+	while (true)
+	{
+
+		if (!RedisHandle::GetInstance().SetString(std::to_string(RedisKey), std::to_string(RedisValue)))
+		{
+			std::cout << "error set value failed !  key: " << RedisKey << " value: " << RedisKey << std::endl;
+		}
+
+		std::string GetStrValue = "";
+		if (!RedisHandle::GetInstance().GetString(std::to_string(RedisKey), GetStrValue))
+		{
+			std::cout << "error get value failed !  key: " << RedisKey << " value: " << RedisKey << std::endl;
+		}
+		else
+		{
+			std::cout << "Get value successful key : " << RedisKey << "  value: " << GetStrValue << std::endl;
+		}
+
+		RedisValue++;
+		if (RedisValue % 60 == 0)
+		{
+			RedisKey++;
+		}
+
+		std::this_thread::sleep_for(std::chrono::seconds(1));
 	}
 
 	NormalSocketPool.SetAddressInfo(NS_ADDRESS_INFO_CONFIGURE);

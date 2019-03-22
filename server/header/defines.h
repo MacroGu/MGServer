@@ -11,10 +11,10 @@
 #include "ServerConf.h"
 
 // log
-#define LOG_INFO	ServerLog::GetInstance().GetInstance().GetRotatingLogger()->info
-#define LOG_ERROR	ServerLog::GetInstance().GetInstance().GetRotatingLogger()->error
-#define LOG_DEBUG	ServerLog::GetInstance().GetInstance().GetRotatingLogger()->debug
-#define LOG_WARN	ServerLog::GetInstance().GetInstance().GetRotatingLogger()->warn
+#define LOG_INFO	ServerLog::GetInstance().GetRotatingLogger()->info
+#define LOG_ERROR	ServerLog::GetInstance().GetRotatingLogger()->error
+#define LOG_DEBUG	ServerLog::GetInstance().GetRotatingLogger()->debug
+#define LOG_WARN	ServerLog::GetInstance().GetRotatingLogger()->warn
 
 // conf
 #define SERVER_CONF_PATH "conf/serverinfo.xml"
