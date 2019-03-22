@@ -148,14 +148,14 @@ int  main(int argc, char ** argv) {
 	}
 
 	std::vector<std::thread> allThreads;
-	for (int i = 0; i < 2; i++)
+	for (int i = 0; i < 0; i++)
 	{
 		allThreads.push_back(std::thread(&ThreadCallBack, i));
 		allThreads[i].detach();
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	}
 	
-	getchar();
+	ThreadCallBack(0);
 
 	return 0;
 }

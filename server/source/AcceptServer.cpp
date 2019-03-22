@@ -222,35 +222,6 @@ bool CAcceptServer::StartServer()
 // 
 // 	if (!WebSocketPool.StartEpoll()) return false;
 
-	uint64_t RedisValue = 0;
-	uint32_t RedisKey = 0;
-	while (true)
-	{
-
-		if (!RedisHandle::GetInstance().SetString(std::to_string(RedisKey), std::to_string(RedisValue)))
-		{
-			std::cout << "error set value failed !  key: " << RedisKey << " value: " << RedisKey << std::endl;
-		}
-
-		std::string GetStrValue = "";
-		if (!RedisHandle::GetInstance().GetString(std::to_string(RedisKey), GetStrValue))
-		{
-			std::cout << "error get value failed !  key: " << RedisKey << " value: " << RedisKey << std::endl;
-		}
-		else
-		{
-			std::cout << "Get value successful key : " << RedisKey << "  value: " << GetStrValue << std::endl;
-		}
-
-		RedisValue++;
-		if (RedisValue % 60 == 0)
-		{
-			RedisKey++;
-		}
-
-		std::this_thread::sleep_for(std::chrono::seconds(1));
-	}
-
 	NormalSocketPool.SetAddressInfo(NS_ADDRESS_INFO_CONFIGURE);
 	NormalSocketPool.SetSocketWatcher(new NormalSocketWatcher());
 
