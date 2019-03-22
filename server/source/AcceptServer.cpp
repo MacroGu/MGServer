@@ -216,7 +216,6 @@ bool CAcceptServer::StartServer()
 		LOG_ERROR("init redis failed!");
 		return false;
 	}
-
 // 	WebSocketPool.SetAddressInfo(WS_ADDRESS_INFO_CONFIGURE);
 // 	WebSocketPool.SetSocketWatcher(new WebSocketWatcher());
 // 

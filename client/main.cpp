@@ -31,22 +31,27 @@ using json = nlohmann::json;
 
 
 #define  BUFFERSIZE 1024
-#define SERVER_IP "127.0.0.1"
+#define SERVER_IP "192.168.137.174"
 #define SERVER_PORT 2019
 
 
-#define SUM_TOTAL 100000
+#define SUM_TOTAL 1000
+#define THREAD_NUM 100
 
 
 char  buffer[BUFFERSIZE];
+
+
 
 
 void ThreadCallBack(int threadID)
 {
 	SOCKET clientsocket;
 	SOCKADDR_IN serveraddr;
-	SOCKADDR_IN clientaddr;
-	unsigned char sendData[2048] = { 0 };
+
+	serveraddr.sin_family = AF_INET;
+	serveraddr.sin_port = htons(SERVER_PORT);
+	serveraddr.sin_addr.S_un.S_addr = inet_addr(SERVER_IP);
 
 	if ((clientsocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) <= 0)   //create a tcp socket  
 	{
@@ -54,17 +59,12 @@ void ThreadCallBack(int threadID)
 		return ;
 	}
 
-	serveraddr.sin_family = AF_INET;
-	serveraddr.sin_port = htons(SERVER_PORT);
-	serveraddr.sin_addr.S_un.S_addr = inet_addr(SERVER_IP);
-
 	//connect to server  
 	if (connect(clientsocket, (SOCKADDR *)&serveraddr, sizeof(serveraddr)) != 0)
 	{
 		printf("Connect fail!\n");
 		return;
 	}
-
 
 	std::string sendDataStr = "";
 
@@ -100,7 +100,6 @@ void ThreadCallBack(int threadID)
 		}
 
 		auto millis = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - beforeTime).count();
-
 		if (Order100Set.size() < SUM_TOTAL)
 		{
 			Order100Set.push_back(millis);
@@ -131,8 +130,6 @@ void ThreadCallBack(int threadID)
 			Order100Set.clear();
 		}
 	}
-
-
 }
 
 int  main(int argc, char ** argv) {
@@ -147,16 +144,16 @@ int  main(int argc, char ** argv) {
 		return -1;
 	}
 
-	std::vector<std::thread> allThreads;
-	for (int i = 0; i < 0; i++)
+	std::thread AllThread[THREAD_NUM];
+	for (int i = 1; i < THREAD_NUM; i++)
 	{
-		allThreads.push_back(std::thread(&ThreadCallBack, i));
-		allThreads[i].detach();
-		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+		AllThread[i] = std::thread(&ThreadCallBack, i);
+		std::this_thread::sleep_for(std::chrono::microseconds(1));
 	}
 	
 	ThreadCallBack(0);
 
+	WSACleanup();
 	return 0;
 }
 
