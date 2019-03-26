@@ -4,6 +4,11 @@ project(server)
 # Add header file include directories
 include_directories(./ ./header ../ ../websocketpp ../wepoll/include)
 
+if(MSVC)
+	link_directories("../librdkafka_win/v140/Win32/Release")
+	include_directories(../librdkafka_win/v140/include)
+endif()
+
 set(HEADER_FILES_PREFIX header)
 set(HEADER_FILES
 	singleton.h
@@ -43,7 +48,7 @@ add_executable(server
     ${SOURCE_FILES}
 )
 if(MSVC)
-	target_link_libraries(server tinyxml wepoll hiredis)
+	target_link_libraries(server tinyxml wepoll hiredis librdkafka)
 	ADD_DEFINITIONS(-D_CRT_SECURE_NO_WARNINGS -D_CRT_SECURE_NO_WARNINGS -D_WINSOCK_DEPRECATED_NO_WARNINGS)
 endif()
 target_link_libraries(server tinyxml hiredis)
