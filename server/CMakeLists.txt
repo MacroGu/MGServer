@@ -6,7 +6,10 @@ include_directories(./ ./header ../ ../websocketpp ../wepoll/include)
 
 if(MSVC)
 	link_directories("../librdkafka_win/v140/Win32/Release")
-	include_directories(../librdkafka_win/v140/include)
+	include_directories(../librdkafka/win/v140/include)
+else()
+	link_directories("../librdkafka/src-cpp")
+	include_directories(../librdkafka/linux/src-cpp)
 endif()
 
 set(HEADER_FILES_PREFIX header)
@@ -50,6 +53,8 @@ add_executable(server
 if(MSVC)
 	target_link_libraries(server tinyxml wepoll hiredis librdkafka)
 	ADD_DEFINITIONS(-D_CRT_SECURE_NO_WARNINGS -D_CRT_SECURE_NO_WARNINGS -D_WINSOCK_DEPRECATED_NO_WARNINGS)
+else()
+	target_link_libraries(server rdkafka++)
 endif()
 target_link_libraries(server tinyxml hiredis)
 
