@@ -12,6 +12,8 @@ ServerConf::ServerConf()
 	bAllConfLoadedRight = true;
 	LoggerInfo = std::make_shared<stLoggerInfo>();
 	RedisInfo = std::make_shared<stRedisInfo>();
+	KafkaInfo = std::make_shared<stKafkaInfo>();
+	UniqueInfo = std::make_shared<stUniqueInfo>();
 }
 
 ServerConf::~ServerConf()
@@ -42,6 +44,18 @@ bool ServerConf::LoadServerConf()
 	if (!LoadRedisInfo(SERVER_CONF_PATH))
 	{
 		std::cout << __FUNCTION__ << " : " << __LINE__ << "  load redis info configuration failed! " << std::endl;
+		return false;
+	}
+
+	if (!LoadKafkaInfo(SERVER_CONF_PATH))
+	{
+		std::cout << __FUNCTION__ << " : " << __LINE__ << "  load kafka info configuration failed! " << std::endl;
+		return false;
+	}
+
+	if (!LoadUniqueInfo(SERVER_CONF_PATH))
+	{
+		std::cout << __FUNCTION__ << " : " << __LINE__ << "  load server unique info configuration failed! " << std::endl;
 		return false;
 	}
 
@@ -248,6 +262,112 @@ bool ServerConf::LoadRedisInfo(const std::string& FilePath)
 		else
 		{
 			std::cout << __FUNCTION__ << " : " << __LINE__ << "  redis info conf type: " << type << " value: " << value << std::endl;
+			doc.Clear();
+			return false;
+		}
+	}
+
+	doc.Clear();
+	return true;
+}
+
+bool ServerConf::LoadKafkaInfo(const std::string& FilePath)
+{
+	TiXmlDocument doc;
+	if (!doc.LoadFile(FilePath.c_str()))
+	{
+		std::cout << __FUNCTION__ << " : " << __LINE__ << "  load file: " << FilePath << " error: " << doc.ErrorDesc() << std::endl;
+		return false;
+	}
+
+	TiXmlElement* server = doc.FirstChildElement();
+	if (server == nullptr)
+	{
+		std::cout << __FUNCTION__ << " : " << __LINE__ << "  can not find root in xml!" << std::endl;
+		return false;
+	}
+
+	TiXmlElement* LogInfo = server->FirstChildElement("kafkaInfo");
+	if (LogInfo == nullptr)
+	{
+		std::cout << __FUNCTION__ << " : " << __LINE__ << "  can not find kafka info xml attribute " << std::endl;
+		return false;
+	}
+
+	for (TiXmlElement* m_serverInfoValue = LogInfo->FirstChildElement("value");
+		m_serverInfoValue != nullptr; m_serverInfoValue = m_serverInfoValue->NextSiblingElement())
+	{
+		const char* type = m_serverInfoValue->Attribute("type");
+		const char* value = m_serverInfoValue->Attribute("value");
+
+		if (strcmp(type, "selfTopic") == 0)
+		{
+			KafkaInfo->selfTopic = value;
+		}
+		else if (strcmp(type, "globalTopic") == 0)
+		{
+			KafkaInfo->globalTopic = value;
+		}
+		else if (strcmp(type, "kafkaIp") == 0)
+		{
+			KafkaInfo->kafkaIp = value;
+		}
+		else if (strcmp(type, "kafkaPort") == 0)
+		{
+			KafkaInfo->kafkaPort = atoi(value);
+		}
+		else if (strcmp(type, "partition") == 0)
+		{
+			KafkaInfo->partition = atoi(value);
+		}
+		else
+		{
+			std::cout << __FUNCTION__ << " : " << __LINE__ << "  kafka info conf type: " << type << " value: " << value << std::endl;
+			doc.Clear();
+			return false;
+		}
+	}
+
+	doc.Clear();
+	return true;
+}
+
+bool ServerConf::LoadUniqueInfo(const std::string& FilePath)
+{
+	TiXmlDocument doc;
+	if (!doc.LoadFile(FilePath.c_str()))
+	{
+		std::cout << __FUNCTION__ << " : " << __LINE__ << "  load file: " << FilePath << " error: " << doc.ErrorDesc() << std::endl;
+		return false;
+	}
+
+	TiXmlElement* server = doc.FirstChildElement();
+	if (server == nullptr)
+	{
+		std::cout << __FUNCTION__ << " : " << __LINE__ << "  can not find root in xml!" << std::endl;
+		return false;
+	}
+
+	TiXmlElement* LogInfo = server->FirstChildElement("uniqueInfo");
+	if (LogInfo == nullptr)
+	{
+		std::cout << __FUNCTION__ << " : " << __LINE__ << "  can not find server unique info xml attribute " << std::endl;
+		return false;
+	}
+
+	for (TiXmlElement* m_serverInfoValue = LogInfo->FirstChildElement("value");
+		m_serverInfoValue != nullptr; m_serverInfoValue = m_serverInfoValue->NextSiblingElement())
+	{
+		const char* type = m_serverInfoValue->Attribute("type");
+		const char* value = m_serverInfoValue->Attribute("value");
+
+		if (strcmp(type, "serverID") == 0)
+		{
+			UniqueInfo->serverID = value;
+		}
+		else
+		{
+			std::cout << __FUNCTION__ << " : " << __LINE__ << " server unique info conf type: " << type << " value: " << value << std::endl;
 			doc.Clear();
 			return false;
 		}

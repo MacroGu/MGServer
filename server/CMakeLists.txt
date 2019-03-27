@@ -23,6 +23,7 @@ set(HEADER_FILES
 	${HEADER_FILES_PREFIX}/EpollSocket.h
 	${HEADER_FILES_PREFIX}/WebSocketStyle.h
 	${HEADER_FILES_PREFIX}/RedisHandle.h
+	${HEADER_FILES_PREFIX}/KafkaHandle.h
 	${HEADER_FILES_PREFIX}/base64.h
 	${HEADER_FILES_PREFIX}/sha1.h
 	${HEADER_FILES_PREFIX}/AcceptServer.h
@@ -36,6 +37,7 @@ set(SOURCE_FILES
 	${SOURCE_FILES_PREFIX}/EpollSocket.cpp
 	${SOURCE_FILES_PREFIX}/WebSocketStyle.cpp
 	${SOURCE_FILES_PREFIX}/RedisHandle.cpp
+	${SOURCE_FILES_PREFIX}/KafkaHandle.cpp
 	${SOURCE_FILES_PREFIX}/base64.cpp
 	${SOURCE_FILES_PREFIX}/sha1.cpp
 	${SOURCE_FILES_PREFIX}/AcceptServer.cpp
@@ -51,7 +53,7 @@ add_executable(server
     ${SOURCE_FILES}
 )
 if(MSVC)
-	target_link_libraries(server tinyxml wepoll hiredis librdkafka)
+	target_link_libraries(server tinyxml wepoll hiredis librdkafkacpp)
 	ADD_DEFINITIONS(-D_CRT_SECURE_NO_WARNINGS -D_CRT_SECURE_NO_WARNINGS -D_WINSOCK_DEPRECATED_NO_WARNINGS)
 else()
 	target_link_libraries(server rdkafka++)

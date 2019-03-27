@@ -3,6 +3,7 @@
 	email: macrogu@qq.com
 	QQ: 877188891
 */
+#pragma once
 
 
 // 目前 redis 的存储 仅支持同步方式， 后续再改成异步方式
