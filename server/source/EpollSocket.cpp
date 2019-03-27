@@ -418,6 +418,7 @@ void EpollSocket::CloseAndReleaseOneEvent(epoll_event &epoll_event)
 {
     if (epoll_event.data.ptr == NULL) 
 	{
+		LOG_INFO("connect close");
         return;
     }
     LOG_DEBUG("connect close");
