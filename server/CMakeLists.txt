@@ -5,7 +5,7 @@ project(server)
 include_directories(./ ./header ../ ../websocketpp ../wepoll/include)
 
 if(MSVC)
-	link_directories("../librdkafka_win/v140/Win32/Release")
+	link_directories("../librdkafka/win/v140/Win32/Release")
 	include_directories(../librdkafka/win/v140/include)
 else()
 	link_directories("../librdkafka/src-cpp")
