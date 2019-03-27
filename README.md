@@ -6,7 +6,7 @@
 
 
 # 编译：
-ubuntu:
-cd build
-cmake -DCMAKE_BUILD_TYPE=Debug ..
-make
+在编译前需要安装 gcc 4.8.5 或以上版本，cmake 3.10 或以上版本， 已在 centos 7 ，ubuntu 18.10 的裸机上测试通过
+直接运行命令
+./linux_build.sh 
+即可以编译整个服务器程序
