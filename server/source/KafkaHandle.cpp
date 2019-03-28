@@ -31,6 +31,7 @@ KafkaHandle::~KafkaHandle()
 
 void KafkaHandle::Start()
 {
+	bKafkaRunning = true;
 	int somedata = 1;
 	SelfTopicConsume = std::thread(&KafkaHandle::SelfTopicConsumeCallback,this, &somedata);
 
@@ -165,9 +166,9 @@ void KafkaHandle::SelfTopicConsumeCallback(void* param)
 	auto partition = KafkaInfo->selfPartition;
 	while (bKafkaRunning) {
 		RdKafka::Message *msg = ConsumerHandle->consume(SelfTopic, partition, 1000);
+		SelfMsgConsume(msg, param);
 		delete msg;
 		ConsumerHandle->poll(0);
-
 	}
 
 }
