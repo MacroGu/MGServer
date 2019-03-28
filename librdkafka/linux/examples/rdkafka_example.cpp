@@ -628,52 +628,7 @@ int main (int argc, char **argv) {
 
     delete topic;
     delete consumer;
-  } else {
-    /* Metadata mode */
-
-    /*
-     * Create producer using accumulated global configuration.
-     */
-    RdKafka::Producer *producer = RdKafka::Producer::create(conf, errstr);
-    if (!producer) {
-      std::cerr << "Failed to create producer: " << errstr << std::endl;
-      exit(1);
-    }
-
-    std::cout << "% Created producer " << producer->name() << std::endl;
-
-    /*
-     * Create topic handle.
-     */
-    RdKafka::Topic *topic = NULL;
-    if(!topic_str.empty()) {
-      topic = RdKafka::Topic::create(producer, topic_str, tconf, errstr);
-      if (!topic) {
-        std::cerr << "Failed to create topic: " << errstr << std::endl;
-        exit(1);
-      }
-    }
-
-    while (run) {
-      class RdKafka::Metadata *metadata;
-
-      /* Fetch metadata */
-      RdKafka::ErrorCode err = producer->metadata(topic!=NULL, topic,
-                              &metadata, 5000);
-      if (err != RdKafka::ERR_NO_ERROR) {
-        std::cerr << "%% Failed to acquire metadata: "
-                  << RdKafka::err2str(err) << std::endl;
-              run = 0;
-              break;
-      }
-
-      metadata_print(topic_str, metadata);
-
-      delete metadata;
-      run = 0;
-    }
-
-  }
+  } 
 
   delete conf;
   delete tconf;

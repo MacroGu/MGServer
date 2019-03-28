@@ -11,7 +11,6 @@
 
 RedisHandle::RedisHandle()
 {
-	RedisInfo = ServerConf::GetInstance().GetRedisInfo();
 	RedisContext = nullptr;
 }
 
@@ -23,6 +22,7 @@ RedisHandle::~RedisHandle()
 
 bool RedisHandle::Init()
 {
+	RedisInfo = ServerConf::GetInstance().GetRedisInfo();
 	if (!RedisInfo)
 	{
 		std::cout << __FUNCTION__ << " : " << __LINE__ << "  get Redis info failed!" << std::endl;

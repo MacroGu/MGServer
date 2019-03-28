@@ -88,6 +88,11 @@ std::shared_ptr<stRedisInfo> ServerConf::GetRedisInfo()
 	return RedisInfo;
 }
 
+std::shared_ptr<stKafkaInfo> ServerConf::GetKafkaInfo()
+{
+	return KafkaInfo;
+}
+
 bool ServerConf::LoadServerInfo(const std::string& fileDir, const std::string& addressInfo)
 {
 	TiXmlDocument doc;
@@ -316,9 +321,13 @@ bool ServerConf::LoadKafkaInfo(const std::string& FilePath)
 		{
 			KafkaInfo->kafkaPort = atoi(value);
 		}
-		else if (strcmp(type, "partition") == 0)
+		else if (strcmp(type, "selfPartition") == 0)
 		{
-			KafkaInfo->partition = atoi(value);
+			KafkaInfo->selfPartition = atoi(value);
+		}
+		else if (strcmp(type, "globalPartition") == 0)
+		{
+			KafkaInfo->globalPartition = atoi(value);
 		}
 		else
 		{

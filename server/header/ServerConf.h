@@ -71,7 +71,9 @@ struct stKafkaInfo
 	std::string globalTopic;
 	std::string kafkaIp;
 	uint32_t kafkaPort;
-	uint8_t partition;
+	uint8_t selfPartition;
+	uint8_t globalPartition;
+
 
 	stKafkaInfo()
 	{
@@ -79,7 +81,8 @@ struct stKafkaInfo
 		globalTopic = "";
 		kafkaIp = "";
 		kafkaPort = 0;
-		partition = 0;
+		selfPartition = 0;
+		globalPartition = 0;
 	}
 
 };

@@ -30,7 +30,8 @@
 		<value type="globalTopic" value="globalTopic" />
 		<value type="kafkaIp" value="localhost" />
 		<value type="kafkaPort" value="9092" />
-		<value type="partition" value="0" />
+		<value type="selfPartition" value="0" />
+		<value type="globalPartition" value="0" />
 	</kafkaInfo>
 	
 	<loggerinfo>		
