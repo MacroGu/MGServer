@@ -37,7 +37,7 @@ protected:
 
 
 protected:
-	void SelfTopicConsumeCallback(void* param);
+	void SelfTopicConsumeCallback(void* self);
 
 private:
 	std::shared_ptr<stKafkaInfo> KafkaInfo;
@@ -50,7 +50,7 @@ private:
 	RdKafka::Consumer* ConsumerHandle;
 	RdKafka::Topic* SelfTopic;
 	RdKafka::Topic* GlobalTopic;
-	std::thread SelfTopicConsume;
+	std::thread* SelfTopicConsume;
 
 	bool bKafkaRunning;
 

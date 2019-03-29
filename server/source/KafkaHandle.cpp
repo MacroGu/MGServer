@@ -4,6 +4,7 @@
 	QQ: 877188891
 */
 
+#include <csignal>
 #include <iostream>
 #include "KafkaHandle.h"
 #include "rdkafkacpp.h"
@@ -22,18 +23,20 @@ KafkaHandle::KafkaHandle()
 	GlobalTopic = nullptr;
 
 	bKafkaRunning = false;
+	SelfTopicConsume = nullptr;
 }
 
 KafkaHandle::~KafkaHandle()
 {
 	bKafkaRunning = false;
+	SelfTopicConsume->detach();
 }
 
 void KafkaHandle::Start()
 {
 	bKafkaRunning = true;
 	int somedata = 1;
-	SelfTopicConsume = std::thread(&KafkaHandle::SelfTopicConsumeCallback,this, &somedata);
+	SelfTopicConsume = new std::thread(&KafkaHandle::SelfTopicConsumeCallback, this, this);
 
 }
 
@@ -91,6 +94,11 @@ bool KafkaHandle::InitKafkaInfo()
 
 bool KafkaHandle::InitConsumerHandle()
 {
+
+	std::string errstr;
+	ConsumerConf->set("metadata.broker.list", KafkaInfo->kafkaIp, errstr);
+	ConsumerConf->set("enable.partition.eof", "true", errstr);
+
 	ConsumerHandle = RdKafka::Consumer::create(ConsumerConf, ConsumerErrstr);
 	if (!ConsumerHandle) {
 		std::cout << __FUNCTION__ << " : " << __LINE__ << "Failed to create consumer: " << ConsumerErrstr << std::endl;
@@ -106,27 +114,10 @@ bool KafkaHandle::InitConsumerHandle()
 		return false;
 	}
 
-	GlobalTopic = RdKafka::Topic::create(ConsumerHandle, KafkaInfo->globalTopic,
-		ConsumerTconf, ConsumerErrstr);
-	if (!GlobalTopic)
-	{
-		std::cout << __FUNCTION__ << " : " << __LINE__ << "Failed to create GlobalTopic: " << KafkaInfo->globalTopic
-			<< " error: " << ConsumerErrstr << std::endl;
-		return false;
-	}
-
 	RdKafka::ErrorCode resp = ConsumerHandle->start(SelfTopic, KafkaInfo->selfPartition, 
 		RdKafka::Topic::OFFSET_BEGINNING);	// ‘› ±–¥À¿ RdKafka::Topic::OFFSET_BEGINNING
 	if (resp != RdKafka::ERR_NO_ERROR) {
 		std::cout << __FUNCTION__ << " : " << __LINE__ << "Failed to start selfPartition consumer: " <<
-			RdKafka::err2str(resp) << std::endl;
-		return false;
-	}
-
-	resp = ConsumerHandle->start(GlobalTopic, KafkaInfo->globalPartition,
-		RdKafka::Topic::OFFSET_BEGINNING);	// ‘› ±–¥À¿ RdKafka::Topic::OFFSET_BEGINNING
-	if (resp != RdKafka::ERR_NO_ERROR) {
-		std::cout << __FUNCTION__ << " : " << __LINE__ << "Failed to start GlobalTopic consumer: " <<
 			RdKafka::err2str(resp) << std::endl;
 		return false;
 	}
@@ -136,40 +127,61 @@ bool KafkaHandle::InitConsumerHandle()
 
 void KafkaHandle::SelfMsgConsume(RdKafka::Message* message, void* opaque)
 {
-	switch (message->err()) {
-	case RdKafka::ERR__TIMED_OUT:
-		break;
 
-	case RdKafka::ERR_NO_ERROR:
-		/* Real message */
-		std::cout << "self consume : " << message->key() << " value: " <<
-			message->payload() << std::endl;
-		break;
+  const RdKafka::Headers *headers;
 
-	case RdKafka::ERR__PARTITION_EOF:
-		/* Last message */
-		break;
+  switch (message->err()) {
+    case RdKafka::ERR__TIMED_OUT:
+      break;
 
-	case RdKafka::ERR__UNKNOWN_TOPIC:
-	case RdKafka::ERR__UNKNOWN_PARTITION:
-		std::cerr << "Consume failed: " << message->errstr() << std::endl;
-		break;
+    case RdKafka::ERR_NO_ERROR:
+      /* Real message */
+      std::cout << "Read msg at offset " << message->offset() << std::endl;
+      if (message->key()) {
+        std::cout << "Key: " << *message->key() << std::endl;
+      }
+      headers = message->headers();
+      if (headers) {
+        std::vector<RdKafka::Headers::Header> hdrs = headers->get_all();
+        for (size_t i = 0 ; i < hdrs.size() ; i++) {
+          const RdKafka::Headers::Header hdr = hdrs[i];
 
-	default:
-		/* Errors */
-		std::cerr << "Consume failed: " << message->errstr() << std::endl;
-	}
+          if (hdr.value() != NULL)
+            printf(" Header: %s = \"%.*s\"\n",
+                   hdr.key().c_str(),
+                   (int)hdr.value_size(), (const char *)hdr.value());
+          else
+            printf(" Header:  %s = NULL\n", hdr.key().c_str());
+        }
+      }
+      printf("%.*s\n",
+        static_cast<int>(message->len()),
+        static_cast<const char *>(message->payload()));
+      break;
+
+    case RdKafka::ERR__PARTITION_EOF:
+      /* Last message */
+      break;
+
+    case RdKafka::ERR__UNKNOWN_TOPIC:
+    case RdKafka::ERR__UNKNOWN_PARTITION:
+      std::cerr << "Consume failed: " << message->errstr() << std::endl;
+      break;
+
+    default:
+      /* Errors */
+      std::cerr << "Consume failed: " << message->errstr() << std::endl;
+  }
 }
 
-void KafkaHandle::SelfTopicConsumeCallback(void* param)
+void KafkaHandle::SelfTopicConsumeCallback(void* self)
 {
-	auto partition = KafkaInfo->selfPartition;
+
 	while (bKafkaRunning) {
-		RdKafka::Message *msg = ConsumerHandle->consume(SelfTopic, partition, 1000);
-		SelfMsgConsume(msg, param);
+		RdKafka::Message *msg = ConsumerHandle->consume(SelfTopic, 0, 1000);
+		SelfMsgConsume(msg, (void*)NULL);
 		delete msg;
 		ConsumerHandle->poll(0);
 	}
-
 }
 
