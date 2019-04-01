@@ -48,3 +48,33 @@
 #define MAX_THREAD_NUMS_THREAD_POOL 128
 
 
+#define MSG_HEADER_LEN 256
+/*
+	包头部分共占256个字节，共分7个部分，详细信息如下：
+
+*/
+struct stMsgHeader
+{
+	char HEAD[2];
+	char REQRET;
+	char TYPE;
+	char SEQ[2];
+	char FROM[64];
+	char TO[64];
+	char DATALEN[2];
+	char RESERVE[120];
+
+	stMsgHeader()
+	{
+		HEAD[2] = { 0 };
+		REQRET = { 0 };
+		TYPE = { 0 };
+		SEQ[2] = { 0 };
+		FROM[64] = { 0 };
+		TO[64] = { 0 };
+		DATALEN[2] = { 0 };
+		RESERVE[120] = { 0 };
+	}
+};
+
+

@@ -5,6 +5,8 @@
 */
 #pragma once
 
+#ifndef _WIN32
+
 
 // 目前 Kafka 的操作，采用异步方式， Kafka 类内部有线程和 kafka 进行通信
 // 不使用消费后回调的方式 
@@ -33,7 +35,7 @@ public:
 protected:
 	bool InitKafkaInfo();
 	bool InitConsumerHandle();
-	void SelfMsgConsume(RdKafka::Message* message, void* opaque);
+	void SelfMsgConsumeHandle(RdKafka::Message* message, void* opaque);
 
 
 protected:
@@ -56,3 +58,4 @@ private:
 
 };
 
+#endif // !_WIN32

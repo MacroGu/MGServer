@@ -4,7 +4,9 @@
 	QQ: 877188891
 */
 
-#include <csignal>
+#ifndef _WIN32
+
+
 #include <iostream>
 #include "KafkaHandle.h"
 #include "rdkafkacpp.h"
@@ -95,7 +97,7 @@ bool KafkaHandle::InitKafkaInfo()
 bool KafkaHandle::InitConsumerHandle()
 {
 
-	std::string errstr;
+	std::string errstr = "";
 	ConsumerConf->set("metadata.broker.list", KafkaInfo->kafkaIp, errstr);
 	ConsumerConf->set("enable.partition.eof", "true", errstr);
 
@@ -125,63 +127,42 @@ bool KafkaHandle::InitConsumerHandle()
 	return true;
 }
 
-void KafkaHandle::SelfMsgConsume(RdKafka::Message* message, void* opaque)
+void KafkaHandle::SelfMsgConsumeHandle(RdKafka::Message* message, void* opaque)
 {
+	switch (message->err()) {
+	case RdKafka::ERR__TIMED_OUT:
+		break;
 
-  const RdKafka::Headers *headers;
+	case RdKafka::ERR_NO_ERROR:
+		/* Real message */
+		std::cout << "self consume : " << message->key() << " value: " <<
+			message->payload() << std::endl;
+		break;
 
-  switch (message->err()) {
-    case RdKafka::ERR__TIMED_OUT:
-      break;
+	case RdKafka::ERR__PARTITION_EOF:
+		/* Last message */
+		break;
 
-    case RdKafka::ERR_NO_ERROR:
-      /* Real message */
-      std::cout << "Read msg at offset " << message->offset() << std::endl;
-      if (message->key()) {
-        std::cout << "Key: " << *message->key() << std::endl;
-      }
-      headers = message->headers();
-      if (headers) {
-        std::vector<RdKafka::Headers::Header> hdrs = headers->get_all();
-        for (size_t i = 0 ; i < hdrs.size() ; i++) {
-          const RdKafka::Headers::Header hdr = hdrs[i];
+	case RdKafka::ERR__UNKNOWN_TOPIC:
+	case RdKafka::ERR__UNKNOWN_PARTITION:
+		std::cerr << "Consume failed: " << message->errstr() << std::endl;
+		break;
 
-          if (hdr.value() != NULL)
-            printf(" Header: %s = \"%.*s\"\n",
-                   hdr.key().c_str(),
-                   (int)hdr.value_size(), (const char *)hdr.value());
-          else
-            printf(" Header:  %s = NULL\n", hdr.key().c_str());
-        }
-      }
-      printf("%.*s\n",
-        static_cast<int>(message->len()),
-        static_cast<const char *>(message->payload()));
-      break;
+	default:
+		/* Errors */
+		std::cerr << "Consume failed: " << message->errstr() << std::endl;
+	}
 
-    case RdKafka::ERR__PARTITION_EOF:
-      /* Last message */
-      break;
-
-    case RdKafka::ERR__UNKNOWN_TOPIC:
-    case RdKafka::ERR__UNKNOWN_PARTITION:
-      std::cerr << "Consume failed: " << message->errstr() << std::endl;
-      break;
-
-    default:
-      /* Errors */
-      std::cerr << "Consume failed: " << message->errstr() << std::endl;
-  }
 }
 
 void KafkaHandle::SelfTopicConsumeCallback(void* self)
 {
-
 	while (bKafkaRunning) {
 		RdKafka::Message *msg = ConsumerHandle->consume(SelfTopic, 0, 1000);
-		SelfMsgConsume(msg, (void*)NULL);
+		SelfMsgConsumeHandle(msg, (void*)NULL);
 		delete msg;
 		ConsumerHandle->poll(0);
 	}
 }
 
+#endif // !_WIN32

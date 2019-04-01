@@ -22,6 +22,7 @@
 #include <nlohmann/json.hpp>
 #include "protocol.h"
 #include <windows.h>
+#include "../server/header/defines.h"
 
 #pragma comment(lib,"ws2_32.lib") 
 #pragma pack(1)
@@ -31,12 +32,12 @@ using json = nlohmann::json;
 
 
 #define  BUFFERSIZE 1024
-#define SERVER_IP "192.168.137.174"
+#define SERVER_IP "127.0.0.1"
 #define SERVER_PORT 2019
 
 
 #define SUM_TOTAL 1000
-#define THREAD_NUM 100
+#define THREAD_NUM 0
 
 
 char  buffer[BUFFERSIZE];
@@ -66,37 +67,44 @@ void ThreadCallBack(int threadID)
 		return;
 	}
 
-	std::string sendDataStr = "";
+	stMsgHeader loginHeader;
+	loginHeader.HEAD[0] = 0x5A;
+	loginHeader.HEAD[1] = 0x55;
+	loginHeader.REQRET = 0x01;
+	uint16_t seq = htons(12345);
+	memcpy(loginHeader.SEQ, &seq, sizeof(seq));
+	memcpy(loginHeader.FROM, "from user uuid", sizeof("from user uuid"));
+	memcpy(loginHeader.TO, "to user uuid", sizeof("to user uuid"));
+	std::string sendDataStr = " json string";
 
-	for (int i = 0; i < 10; i++)
-	{
-		sendDataStr += "test data send;";
-	}
+	uint16_t datalen = htons(sendDataStr.length());
 
-	std::string tempSendData = sendDataStr;
+	memcpy(loginHeader.DATALEN, &datalen, sizeof(datalen));
+
+	uint16_t totalLen = MSG_HEADER_LEN + sendDataStr.length();
+	char* sendData = new char[totalLen];
+	memcpy(sendData, &loginHeader, MSG_HEADER_LEN);
+	memcpy(sendData + MSG_HEADER_LEN, sendDataStr.c_str(), sendDataStr.length());
 
 	std::list < uint64_t> Order100Set;
-
-
 	while (true)
 	{
+		std::cout << "input " << std::endl;
+		int a;
+		std::cin >> a;
 		auto beforeTime = std::chrono::system_clock::now();
 
-		if (send(clientsocket, sendDataStr.c_str(), sendDataStr.length(), 0) <= 0)
+		if (send(clientsocket, sendData, MSG_HEADER_LEN + datalen, 0) <= 0)
 		{
 			printf("send data Error!, not last one package \n");
 			return ;
 		}
 
+		std::cout << "waitting receiving " << std::endl;
 		char recvData[1024] = { 0 };
 		if (recv(clientsocket, (char*)recvData, sendDataStr.length(), 0) < 0)
 		{
 			std::cout << "recv error !" << std::endl;
-		}
-
-		if (std::strcmp(recvData, tempSendData.c_str()) != 0)
-		{
-			std::cout << "send data error " << std::endl;
 		}
 
 		auto millis = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - beforeTime).count();
@@ -144,12 +152,12 @@ int  main(int argc, char ** argv) {
 		return -1;
 	}
 
-	std::thread AllThread[THREAD_NUM];
-	for (int i = 1; i < THREAD_NUM; i++)
-	{
-		AllThread[i] = std::thread(&ThreadCallBack, i);
-		std::this_thread::sleep_for(std::chrono::microseconds(1));
-	}
+// 	std::thread AllThread[THREAD_NUM];
+// 	for (int i = 1; i < THREAD_NUM; i++)
+// 	{
+// 		AllThread[i] = std::thread(&ThreadCallBack, i);
+// 		std::this_thread::sleep_for(std::chrono::microseconds(1));
+// 	}
 	
 	ThreadCallBack(0);
 

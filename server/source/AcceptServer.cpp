@@ -187,7 +187,19 @@ int NormalSocketWatcher::OnEpollCloseEvent(stSocketContext &socket_context)
 
 bool NormalSocketWatcher::HandleClientNormalSocketData(stSocketContext *socket_context, char clientData[], int dataLength)
 {
-	socket_context->stToClient = clientData;
+	stMsgHeader clientHeader;
+	memcpy(&clientHeader, clientData, MSG_HEADER_LEN);
+	uint16_t seqTemp;
+	memcpy(&seqTemp, clientHeader.SEQ, sizeof(seqTemp));
+	uint16_t seq = ntohs(seqTemp);
+
+	char* clientDataPart = new char[dataLength - MSG_HEADER_LEN + 1];
+	clientDataPart[dataLength - MSG_HEADER_LEN] = '\0';
+	memcpy(clientDataPart, clientData + MSG_HEADER_LEN, dataLength - MSG_HEADER_LEN);
+	std::cout << "data : " << clientDataPart;
+
+
+	socket_context->stToClient = "received!";
 	return true;
 }
 
@@ -219,6 +231,7 @@ bool CAcceptServer::StartServer()
 		return false;
 	}
 
+#ifndef _WIN32
 	KafkaHandle KafkaHandleOp;
 	if (!KafkaHandleOp.Init())
 	{
@@ -226,6 +239,7 @@ bool CAcceptServer::StartServer()
 		return false;
 	}
 	KafkaHandleOp.Start();
+#endif
 
 // 	WebSocketPool.SetAddressInfo(WS_ADDRESS_INFO_CONFIGURE);
 // 	WebSocketPool.SetSocketWatcher(new WebSocketWatcher());
