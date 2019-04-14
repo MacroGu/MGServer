@@ -11,7 +11,6 @@
 #include "protocol.h"
 #include "ServerConf.h"
 #include "RedisHandle.h"
-#include "KafkaHandle.h"
 
 
 WebSocketWatcher::WebSocketWatcher()
@@ -230,16 +229,6 @@ bool CAcceptServer::StartServer()
 		LOG_ERROR("init redis failed!");
 		return false;
 	}
-
-#ifndef _WIN32
-	KafkaHandle KafkaHandleOp;
-	if (!KafkaHandleOp.Init())
-	{
-		LOG_ERROR("init kafka failed!");
-		return false;
-	}
-	KafkaHandleOp.Start();
-#endif
 
 // 	WebSocketPool.SetAddressInfo(WS_ADDRESS_INFO_CONFIGURE);
 // 	WebSocketPool.SetSocketWatcher(new WebSocketWatcher());

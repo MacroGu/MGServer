@@ -4,14 +4,6 @@ project(server)
 # Add header file include directories
 include_directories(./ ./header ../ ../websocketpp ../wepoll/include)
 
-if(MSVC)
-	link_directories("../librdkafka/win/v140/Win32/Release")
-	include_directories(../librdkafka/win/v140/include)
-else()
-	link_directories("../librdkafka/linux/src-cpp")
-	link_directories("../librdkafka/linux/src")
-	include_directories(../librdkafka/linux/src-cpp)
-endif()
 
 set(HEADER_FILES_PREFIX header)
 set(HEADER_FILES
@@ -24,7 +16,6 @@ set(HEADER_FILES
 	${HEADER_FILES_PREFIX}/EpollSocket.h
 	${HEADER_FILES_PREFIX}/WebSocketStyle.h
 	${HEADER_FILES_PREFIX}/RedisHandle.h
-	${HEADER_FILES_PREFIX}/KafkaHandle.h
 	${HEADER_FILES_PREFIX}/base64.h
 	${HEADER_FILES_PREFIX}/sha1.h
 	${HEADER_FILES_PREFIX}/AcceptServer.h
@@ -38,7 +29,6 @@ set(SOURCE_FILES
 	${SOURCE_FILES_PREFIX}/EpollSocket.cpp
 	${SOURCE_FILES_PREFIX}/WebSocketStyle.cpp
 	${SOURCE_FILES_PREFIX}/RedisHandle.cpp
-	${SOURCE_FILES_PREFIX}/KafkaHandle.cpp
 	${SOURCE_FILES_PREFIX}/base64.cpp
 	${SOURCE_FILES_PREFIX}/sha1.cpp
 	${SOURCE_FILES_PREFIX}/AcceptServer.cpp
@@ -54,10 +44,10 @@ add_executable(server
     ${SOURCE_FILES}
 )
 if(MSVC)
-	target_link_libraries(server tinyxml wepoll hiredis librdkafkacpp)
+	target_link_libraries(server tinyxml wepoll hiredis)
 	ADD_DEFINITIONS(-D_CRT_SECURE_NO_WARNINGS -D_CRT_SECURE_NO_WARNINGS -D_WINSOCK_DEPRECATED_NO_WARNINGS)
 else()
-	target_link_libraries(server rdkafka++ rdkafka)
+
 endif()
 target_link_libraries(server tinyxml hiredis)
 

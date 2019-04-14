@@ -7,7 +7,6 @@
 
 #include "AcceptServer.h"
 #include <iostream>
-#include "rdkafkacpp.h"
 
 int  main(int argc, char ** argv) {
 
