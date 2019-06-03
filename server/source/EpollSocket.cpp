@@ -123,7 +123,7 @@ int EpollSocket::AcceptConnectSocket(int sockfd, std::string &client_ip)
     return new_fd;
 }
 
-void EpollSocket::HandleAcceptEvent(int &epollfd, epoll_event &event, SocketWatcher &socket_handler) 
+void EpollSocket::HandleAcceptEvent(int &epollfd, epoll_event &event, BaseSocketWatcher &socket_handler) 
 {
     int sockfd = event.data.fd;
 
@@ -195,7 +195,7 @@ void EpollSocket::HandleEpollReadableEvent(epoll_event &event)
     }
 }
 
-void EpollSocket::HandleWriteableEvent(int &epollfd, epoll_event &event, SocketWatcher &socket_handler) {
+void EpollSocket::HandleWriteableEvent(int &epollfd, epoll_event &event, BaseSocketWatcher &socket_handler) {
     stSocketContext *socket_context = (stSocketContext *) event.data.ptr;
     int fd = socket_context->fd;
     //LOG_DEBUG("start write data");
@@ -241,7 +241,7 @@ void EpollSocket::SetAddressInfo(const stAddressInfo& addressInfo)
 	this->AddressInfo.threadNums = addressInfo.threadNums;
 }
 
-void EpollSocket::SetSocketWatcher(SocketWatcher* watcher)
+void EpollSocket::SetSocketWatcher(BaseSocketWatcher* watcher)
 {
 	if (watcher == nullptr)
 	{

@@ -5,8 +5,9 @@
 */
 
 
-#include "AcceptServer.h"
-#include <iostream>
+#include "GameServer.h"
+
+
 
 int  main(int argc, char ** argv) {
 

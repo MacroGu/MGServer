@@ -48,7 +48,7 @@ public:
 	}
 };
 
-class SocketWatcher 
+class BaseSocketWatcher 
 {
     public:
         virtual int OnEpollAcceptEvent(stSocketContext &socket_context) = 0;
@@ -81,9 +81,9 @@ private:
 
         bool BindOnAddress(const stAddressInfo& addressInfo);
 
-        void HandleAcceptEvent(int &epollfd, epoll_event &event, SocketWatcher &socket_watcher);
+        void HandleAcceptEvent(int &epollfd, epoll_event &event, BaseSocketWatcher &socket_watcher);
 
-        void HandleWriteableEvent(int &epollfd, epoll_event &event, SocketWatcher &socket_watcher);
+        void HandleWriteableEvent(int &epollfd, epoll_event &event, BaseSocketWatcher &socket_watcher);
 
         void CloseAndReleaseOneEvent(epoll_event &event);
 
@@ -103,7 +103,7 @@ private:
 
 		stAddressInfo AddressInfo;
 
-		SocketWatcher* Watcher;
+		BaseSocketWatcher* Watcher;
 
 #ifndef _WIN32
 		int _epollfd;
@@ -131,7 +131,7 @@ public:
 
 		void SetAddressInfo(const stAddressInfo& addressInfo);
 		
-		void SetSocketWatcher(SocketWatcher* watcher);
+		void SetSocketWatcher(BaseSocketWatcher* watcher);
 };
 
 struct TaskData 
