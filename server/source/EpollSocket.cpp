@@ -175,9 +175,9 @@ void EpollSocket::HandleEpollReadableEvent(epoll_event &event)
     int ret = Watcher->OnEpollReadableEvent((int&)_epollfd, event);
     if (ret == READ_CLOSE) 
 	{
-        CloseAndReleaseOneEvent(event);
-		LOG_ERROR("Handle Epoll Readable event failed! fd: {}, IP: {}", 
+		LOG_ERROR("Handle Epoll Readable event failed! fd: {}, IP: {}",
 			socket_context->fd, socket_context->client_ip);
+        CloseAndReleaseOneEvent(event);
 		return;
     }
     if (ret == READ_CONTINUE) 
