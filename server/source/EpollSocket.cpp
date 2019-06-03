@@ -26,7 +26,7 @@
 
 EpollSocket::EpollSocket() 
 {
-    WorkerThreadPtr = NULL;
+    WorkerThreadPtr = nullptr;
 	ListenedSocket = 0;
 	Watcher = nullptr;
 	EpollStatus = EPOLL_RUNNING;
@@ -44,7 +44,7 @@ EpollSocket::~EpollSocket()
     if (WorkerThreadPtr != nullptr) 
 	{
         delete WorkerThreadPtr;
-        WorkerThreadPtr = NULL;
+        WorkerThreadPtr = nullptr;
     }
 #ifdef _WIN32
 	WSACleanup();
@@ -227,17 +227,13 @@ void EpollSocket::HandleWriteableEvent(int &epollfd, epoll_event &event, BaseSoc
 #endif // !_WIN32
 }
 
-void EpollSocket::SetThreadPoll(WorkerThread *tp) 
-{
-    this->WorkerThreadPtr = tp;
-}
-
 void EpollSocket::SetAddressInfo(const stAddressInfo& addressInfo)
 {
 	this->AddressInfo.serverIp = addressInfo.serverIp;
 	this->AddressInfo.backlog = addressInfo.backlog;
 	this->AddressInfo.port = addressInfo.port;
 	this->AddressInfo.maxEvents = addressInfo.maxEvents;
+	this->AddressInfo.WorkerThreadTaskMax = addressInfo.WorkerThreadTaskMax;
 }
 
 void EpollSocket::SetSocketWatcher(BaseSocketWatcher* watcher)
@@ -254,6 +250,12 @@ void EpollSocket::SetSocketWatcher(BaseSocketWatcher* watcher)
 bool EpollSocket::InitThreadPool() 
 {
     WorkerThreadPtr = new WorkerThread();
+
+	if (!WorkerThreadPtr)
+	{
+		LOG_ERROR("create worker thread failed!");
+	}
+	WorkerThreadPtr->SetTaskSizeLimit(AddressInfo.WorkerThreadTaskMax);
 
     return true;
 }

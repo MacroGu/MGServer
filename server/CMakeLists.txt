@@ -12,7 +12,7 @@ set(HEADER_FILES
 	${HEADER_FILES_PREFIX}/defines.h
     ${HEADER_FILES_PREFIX}/ServerLog.h
 	${HEADER_FILES_PREFIX}/ServerConf.h
-	${HEADER_FILES_PREFIX}/ThreadPool.h
+	${HEADER_FILES_PREFIX}/WorkerThread.h
 	${HEADER_FILES_PREFIX}/EpollSocket.h
 	${HEADER_FILES_PREFIX}/WebSocketStyle.h
 	${HEADER_FILES_PREFIX}/RedisHandle.h
@@ -25,7 +25,7 @@ set(SOURCE_FILES_PREFIX source)
 set(SOURCE_FILES 
     ${SOURCE_FILES_PREFIX}/ServerLog.cpp
 	${SOURCE_FILES_PREFIX}/ServerConf.cpp
-	${SOURCE_FILES_PREFIX}/ThreadPool.cpp
+	${SOURCE_FILES_PREFIX}/WorkerThread.cpp
 	${SOURCE_FILES_PREFIX}/EpollSocket.cpp
 	${SOURCE_FILES_PREFIX}/WebSocketStyle.cpp
 	${SOURCE_FILES_PREFIX}/RedisHandle.cpp

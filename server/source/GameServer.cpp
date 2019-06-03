@@ -87,7 +87,7 @@ bool GameSocketWatcher::HandleClientNormalSocketData(stSocketContext *socket_con
 {
 	LOG_INFO("recv client data: {}", clientData);
 
-	socket_context->stToClient = "received!";
+	socket_context->stToClient = clientData;
 	return true;
 }
 
@@ -120,7 +120,7 @@ bool CGameServer::StartServer()
 		return false;
 	}
 
-	SocketPool.SetAddressInfo(NS_ADDRESS_INFO_CONFIGURE);
+	SocketPool.SetAddressInfo(ADDRESS_INFO_CONFIGURE);
 	SocketPool.SetSocketWatcher(new GameSocketWatcher());
 
 	if (!SocketPool.StartEpoll()) return false;

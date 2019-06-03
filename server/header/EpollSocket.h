@@ -20,7 +20,7 @@
 #include <set>
 #include <string>
 #include <stdint.h>
-#include "ThreadPool.h"
+#include "WorkerThread.h"
 #include "defines.h"
 
 
@@ -126,8 +126,6 @@ public:
         bool StartEpoll();
         
         void StopEpoll();
-
-        void SetThreadPoll(WorkerThread *tp);
 
 		void SetAddressInfo(const stAddressInfo& addressInfo);
 		

@@ -6,24 +6,15 @@
 		<!-- 每一个服务器的唯一编号 -->
 		<value type="serverID"  value = "server01" />
 	</uniqueInfo>
-	
-	<!-- websocket address info -->
-	<wsaddressInfo>
-		<value type="serverIp" value="localhost" /> 
-		<value type="port" value="2018" />    
-		<value type="maxevents" value="1000" />
-		<value type="backlog" value="1000" />
-		<value type="threadNums" value="2" />
-	</wsaddressInfo>
 
 	<!-- normal socket address info -->
-	<nsaddressInfo>
+	<addressInfo>
 		<value type="serverIp" value="localhost" /> 
 		<value type="port" value="2019" />    
 		<value type="maxevents" value="1000" />
 		<value type="backlog" value="1000" />
-		<value type="threadNums" value="2" />
-	</nsaddressInfo>	
+		<value type="WorkerThreadTaskMax" value="-1" />
+	</addressInfo>	
 	
 	<loggerinfo>		
 		<value type="LoggerName" value="gameserver" />

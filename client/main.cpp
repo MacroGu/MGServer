@@ -83,10 +83,15 @@ void ThreadCallBack(int threadID)
 		{
 			std::cout << "recv error !" << std::endl;
 		}
-
-		std::string receivedData = std::string(recvData);
 		auto millis = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - beforeTime).count();
 
+		std::string receivedData = std::string(recvData);
+		if (receivedData != sendData)
+		{
+			std::cout << "data send failed!" << std::endl;
+		}
+
+		std::this_thread::sleep_for(std::chrono::microseconds(1));
 	}
 }
 

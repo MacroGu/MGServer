@@ -41,10 +41,9 @@
 
 // conf
 #define SERVER_CONF_PATH "conf/serverinfo.xml"
-#define WEBSOCKET_ADDRESS_INFO "wsaddressInfo"
-#define NORMALSOCKET_ADDRESS_INFO "nsaddressInfo"
-#define WS_ADDRESS_INFO_CONFIGURE ServerConf::GetInstance().GetWSAddressInfoConfiguration()
-#define NS_ADDRESS_INFO_CONFIGURE ServerConf::GetInstance().GetNSAddressInfoConfiguration()
+#define ADDRESS_INFO "addressInfo"
+#define ADDRESS_INFO_CONFIGURE ServerConf::GetInstance().GetAddressInfoConfiguration()
+
 
 // buffer size
 #define MAX_WEBSOCKET_BUFFER 4096

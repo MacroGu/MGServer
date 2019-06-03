@@ -22,15 +22,9 @@ ServerConf::~ServerConf()
 
 bool ServerConf::LoadServerConf()
 {
-	if (!LoadServerInfo(SERVER_CONF_PATH, WEBSOCKET_ADDRESS_INFO))
+	if (!LoadServerInfo(SERVER_CONF_PATH, ADDRESS_INFO))
 	{
-		std::cout << __FUNCTION__ << " : " << __LINE__ << "  load local server configuration failed! WEBSOCKET_ADDRESS_INFO" << std::endl;
-		return false;
-	}
-
-	if (!LoadServerInfo(SERVER_CONF_PATH, NORMALSOCKET_ADDRESS_INFO))
-	{
-		std::cout << __FUNCTION__ << " : " << __LINE__ << "  load local server configuration failed! NORMALSOCKET_ADDRESS_INFO" << std::endl;
+		std::cout << __FUNCTION__ << " : " << __LINE__ << "  load local server configuration failed! ADDRESS_INFO" << std::endl;
 		return false;
 	}
 
@@ -60,14 +54,9 @@ bool ServerConf::hasLoadConfRight()
 	return bAllConfLoadedRight;
 }
 
-const stAddressInfo& ServerConf::GetWSAddressInfoConfiguration()
+const stAddressInfo& ServerConf::GetAddressInfoConfiguration()
 {
-	return webSocketInfo;
-}
-
-const stAddressInfo& ServerConf::GetNSAddressInfoConfiguration()
-{
-	return normalSocketInfo;
+	return AddressInfo;
 }
 
 std::shared_ptr<stLoggerInfo> ServerConf::GetLoggerInfo()
@@ -103,22 +92,6 @@ bool ServerConf::LoadServerInfo(const std::string& fileDir, const std::string& a
 		return false;
 	}
 
-	stAddressInfo* serverInfo = nullptr;
-	if (WEBSOCKET_ADDRESS_INFO == addressInfo)
-	{
-		serverInfo = &webSocketInfo;
-	}
-	else if (NORMALSOCKET_ADDRESS_INFO == addressInfo)
-	{
-		serverInfo = &normalSocketInfo;
-	}
-	else
-	{
-		std::cout << __FUNCTION__ << " : " << __LINE__ << "  address info is wrong!" << std::endl;
-		return false;
-	}
-	
-
 	for (TiXmlElement* m_serverInfoValue = m_serverInfo->FirstChildElement("value");
 		m_serverInfoValue != nullptr; m_serverInfoValue = m_serverInfoValue->NextSiblingElement())
 	{
@@ -127,19 +100,23 @@ bool ServerConf::LoadServerInfo(const std::string& fileDir, const std::string& a
 
 		if (strcmp(type, "serverIp") == 0)
 		{
-			serverInfo->serverIp = value;
+			AddressInfo.serverIp = value;
 		}
 		else if (strcmp(type, "port") == 0)
 		{
-			serverInfo->port = atoi(value);
+			AddressInfo.port = atoi(value);
 		}
 		else if (strcmp(type, "maxevents") == 0)
 		{
-			serverInfo->maxEvents = atoi(value);
+			AddressInfo.maxEvents = atoi(value);
 		}
 		else if (strcmp(type, "backlog") == 0)
 		{
-			serverInfo->backlog = atoi(value);
+			AddressInfo.backlog = atoi(value);
+		}
+		else if (strcmp(type, "WorkerThreadTaskMax") == 0)
+		{
+			AddressInfo.WorkerThreadTaskMax = atoi(value);
 		}
 		else
 		{

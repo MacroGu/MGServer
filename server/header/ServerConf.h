@@ -20,6 +20,7 @@ struct stAddressInfo
 	uint32_t port;
 	uint32_t maxEvents;
 	uint32_t backlog;
+	uint32_t WorkerThreadTaskMax;
 
 	stAddressInfo()
 	{
@@ -27,6 +28,7 @@ struct stAddressInfo
 		port = 0;
 		maxEvents = 0;
 		backlog = 0;
+		WorkerThreadTaskMax = 0;
 	}
 };
 
@@ -82,10 +84,8 @@ public:
 	bool LoadServerConf();
 	// if load conf file right return true
 	bool hasLoadConfRight();
-	// get websocket address info configuration
-	const stAddressInfo& GetWSAddressInfoConfiguration();
 	// get normal socket addresss info configuration
-	const stAddressInfo& GetNSAddressInfoConfiguration();
+	const stAddressInfo& GetAddressInfoConfiguration();
 	// get log configuration
 	std::shared_ptr<stLoggerInfo> GetLoggerInfo();
 	// get redis configuration
@@ -103,10 +103,8 @@ protected:
 
 
 private:
-	// WebSocket address info
-	stAddressInfo webSocketInfo;
 	// normal socket address info
-	stAddressInfo normalSocketInfo;
+	stAddressInfo AddressInfo;
 	// log configuration
 	std::shared_ptr<stLoggerInfo> LoggerInfo;
 	// redis configuration

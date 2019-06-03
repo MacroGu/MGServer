@@ -8,7 +8,7 @@
 #include <errno.h>
 #include <string.h>
 #include <sstream>
-#include "ThreadPool.h"
+#include "WorkerThread.h"
 
 
 Task::Task(std::function<void (void*)> callBackFun, void* arg) 
