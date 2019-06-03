@@ -202,17 +202,17 @@ bool NormalSocketWatcher::HandleClientNormalSocketData(stSocketContext *socket_c
 	return true;
 }
 
-CAcceptServer::CAcceptServer()
+CGameServer::CGameServer()
 {
 }
 
-CAcceptServer::~CAcceptServer()
+CGameServer::~CGameServer()
 {
 	// WebSocketPool.StopEpoll();
 	NormalSocketPool.StopEpoll();
 }
 
-bool CAcceptServer::StartServer()
+bool CGameServer::StartServer()
 {
 	if (!ServerConf::GetInstance().LoadServerConf())
 	{
@@ -230,11 +230,6 @@ bool CAcceptServer::StartServer()
 		LOG_ERROR("init redis failed!");
 		return false;
 	}
-
-// 	WebSocketPool.SetAddressInfo(WS_ADDRESS_INFO_CONFIGURE);
-// 	WebSocketPool.SetSocketWatcher(new WebSocketWatcher());
-// 
-// 	if (!WebSocketPool.StartEpoll()) return false;
 
 	NormalSocketPool.SetAddressInfo(NS_ADDRESS_INFO_CONFIGURE);
 	NormalSocketPool.SetSocketWatcher(new NormalSocketWatcher());

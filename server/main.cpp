@@ -10,9 +10,9 @@
 
 int  main(int argc, char ** argv) {
 
-	CAcceptServer acceptServer;
+	CGameServer gameserver;
 
-	acceptServer.StartServer();
+	gameserver.StartServer();
 
 	return 0;
 

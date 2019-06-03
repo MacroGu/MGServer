@@ -62,11 +62,11 @@ private:
 };
 
 
-class CAcceptServer
+class CGameServer
 {
 public:
-	CAcceptServer();
-	~CAcceptServer();
+	CGameServer();
+	~CGameServer();
 
 	bool StartServer();
 

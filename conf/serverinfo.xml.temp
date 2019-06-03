@@ -26,8 +26,8 @@
 	</nsaddressInfo>	
 	
 	<loggerinfo>		
-		<value type="LoggerName" value="acceptServer" />
-		<value type="LogFilePath" value="logs/acceptServer.log" />
+		<value type="LoggerName" value="gameserver" />
+		<value type="LogFilePath" value="logs/gameserver.log" />
 		<value type="MaxSingleFileSize" value="1048576" />		<!-- 单文件最大为 1024*1024 = 1M -->
 		<value type="MaxLogFileNums" value="10" />		<!-- 单服务器最大日志文件数量为 10个 -->
 	</loggerinfo>
