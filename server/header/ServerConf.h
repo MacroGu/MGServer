@@ -64,29 +64,6 @@ struct stRedisInfo
 
 };
 
-// kafka info
-struct stKafkaInfo
-{
-	std::string selfTopic;
-	std::string globalTopic;
-	std::string kafkaIp;
-	uint32_t kafkaPort;
-	uint8_t selfPartition;
-	uint8_t globalPartition;
-
-
-	stKafkaInfo()
-	{
-		selfTopic = "";
-		globalTopic = "";
-		kafkaIp = "";
-		kafkaPort = 0;
-		selfPartition = 0;
-		globalPartition = 0;
-	}
-
-};
-
 // current server unique info
 struct stUniqueInfo
 {
@@ -115,8 +92,6 @@ public:
 	std::shared_ptr<stLoggerInfo> GetLoggerInfo();
 	// get redis configuration
 	std::shared_ptr<stRedisInfo> GetRedisInfo();
-	// get kafka configuration
-	std::shared_ptr<stKafkaInfo> GetKafkaInfo();
 
 protected:
 	// load local server configure
@@ -125,8 +100,6 @@ protected:
 	bool LoadLogInfo(const std::string& FilePath);
 	// load redis configure
 	bool LoadRedisInfo(const std::string& FilePath);
-	// load kafka configure
-	bool LoadKafkaInfo(const std::string& FilePath);
 	// load server unique info configure
 	bool LoadUniqueInfo(const std::string& FilePath);
 
@@ -140,8 +113,6 @@ private:
 	std::shared_ptr<stLoggerInfo> LoggerInfo;
 	// redis configuration
 	std::shared_ptr<stRedisInfo> RedisInfo;
-	// kafka configuration
-	std::shared_ptr<stKafkaInfo> KafkaInfo;
 	// current server unique info configuration
 	std::shared_ptr<stUniqueInfo> UniqueInfo;
 
