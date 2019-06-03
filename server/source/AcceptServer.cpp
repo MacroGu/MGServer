@@ -224,6 +224,7 @@ bool CAcceptServer::StartServer()
 		LOG_INFO("load server configuration successfully! ");
 	}
 
+
 	if (!RedisHandle::GetInstance().Init())
 	{
 		LOG_ERROR("init redis failed!");

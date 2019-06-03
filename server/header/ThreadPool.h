@@ -39,9 +39,6 @@ public:
 		// 添加task 到线程池执行队列
         bool AddTask(Task *task);
 
-		// 设置线程执行任务前的回调
-        void SetThreadCallBackAtStart(std::function<void(void)> startedCB);
-        
 		void SetTaskSizeLimit(int size);
 
         bool SetWorkThreadNums(int threadNums);
@@ -74,9 +71,6 @@ private:
 		// 需要线程池处理的任务队列
         std::queue<Task *> TasksQueue;
 
-		// 如果设置了 线程执行任务前的回调
-		std::function<void(void)> CallBackFunAtStart;
-		
 		// ture: 表面线程池正在运行  false: 表面 线程池停止运行
 		bool bThreadPoolRunning;
 

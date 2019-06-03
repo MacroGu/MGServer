@@ -25,13 +25,12 @@ bool RedisHandle::Init()
 	RedisInfo = ServerConf::GetInstance().GetRedisInfo();
 	if (!RedisInfo)
 	{
-		std::cout << __FUNCTION__ << " : " << __LINE__ << "  get Redis info failed!" << std::endl;
+		LOG_ERROR("get Redis info failed!");
 		return false;
 	}
 	
 	if (!ConnectRedis())
 	{
-		std::cout << __FUNCTION__ << " : " << __LINE__ << "  connect to Redis failed!" << std::endl;
 		return false;
 	}
 

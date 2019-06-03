@@ -52,7 +52,6 @@ bool ServerConf::LoadServerConf()
 		return false;
 	}
 
-	std::cout << __FUNCTION__ << " : " << __LINE__ << "  load server configuration successfully!" << std::endl;
 	return true;
 }
 

@@ -42,17 +42,13 @@ ThreadPool::~ThreadPool()
 
 void ThreadPool::ThreadCallBackFunc(void* arg)
 {
-    ThreadPool* tp = (ThreadPool *)arg;
-    if (tp->CallBackFunAtStart) 
+	ThreadPool* tp = (ThreadPool*)arg;
+	if (!tp)
 	{
-        tp->CallBackFunAtStart();
-    } 
-	else 
-	{
-        LOG_ERROR("thread start cb is null");
-    }
+		LOG_ERROR("thread pool is null");
+	}
 
-    tp->ExecuteThread();
+	tp->ExecuteThread();
 }
 
 bool ThreadPool::Start()
@@ -73,11 +69,6 @@ bool ThreadPool::Start()
 	}
 
     return true;
-}
-
-void ThreadPool::SetThreadCallBackAtStart(std::function<void(void)> startedCB) 
-{
-	CallBackFunAtStart = startedCB;
 }
 
 void ThreadPool::SetTaskSizeLimit(int size) 
