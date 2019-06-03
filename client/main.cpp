@@ -32,18 +32,18 @@ using json = nlohmann::json;
 
 
 #define  BUFFERSIZE 1024
-#define SERVER_IP "127.0.0.1"
+#define SERVER_IP "106.12.80.224"
 #define SERVER_PORT 2019
 
 
 #define SUM_TOTAL 1000
-#define THREAD_NUM 1
+#define THREAD_NUM 100
 
 
 char  buffer[BUFFERSIZE];
 
 
-
+int totalClients;
 
 void ThreadCallBack(int threadID)
 {
@@ -69,12 +69,13 @@ void ThreadCallBack(int threadID)
 
 	std::string sendData = "test client data 1";
 
-	while (true)
+	for (;;)
 	{
 		auto beforeTime = std::chrono::system_clock::now();
 		if (send(clientsocket, sendData.c_str(), sendData.length(), 0) <= 0)
 		{
 			printf("send data Error!, not last one package \n");
+			--totalClients;
 			return;
 		}
 
@@ -82,6 +83,8 @@ void ThreadCallBack(int threadID)
 		if (recv(clientsocket, (char*)recvData, sendData.length(), 0) < 0)
 		{
 			std::cout << "recv error !" << std::endl;
+			--totalClients;
+			return;
 		}
 		auto millis = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - beforeTime).count();
 
@@ -105,6 +108,7 @@ int  main(int argc, char ** argv) {
 		return -1;
 	}
 
+	totalClients = THREAD_NUM;
 	std::thread AllThread[THREAD_NUM];
 	for (int i = 1; i < THREAD_NUM; i++)
 	{
@@ -112,8 +116,12 @@ int  main(int argc, char ** argv) {
 		std::this_thread::sleep_for(std::chrono::microseconds(1));
 	}
 	
-	ThreadCallBack(0);
 
+	while (true)
+	{
+		std::cout << "current living client nums: " << totalClients << std::endl;
+		std::this_thread::sleep_for(std::chrono::seconds(1800));
+	}
 	WSACleanup();
 	return 0;
 }
