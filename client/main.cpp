@@ -44,6 +44,8 @@ char  buffer[BUFFERSIZE];
 
 
 int totalClients;
+std::mutex g_mutex;
+int lostClients;
 
 void ThreadCallBack(int threadID)
 {
@@ -61,29 +63,39 @@ void ThreadCallBack(int threadID)
 	}
 
 	//connect to server  
-	if (connect(clientsocket, (SOCKADDR *)&serveraddr, sizeof(serveraddr)) != 0)
+	while (connect(clientsocket, (SOCKADDR*)& serveraddr, sizeof(serveraddr)) != 0)
 	{
-		printf("Connect fail!\n");
-		return;
-	}
+		std::this_thread::sleep_for(std::chrono::seconds(5));
+	} 
+	g_mutex.lock();
+	totalClients++;
+	g_mutex.unlock();
 
 	std::string sendData = "test client data 1";
-
 	for (;;)
 	{
 		auto beforeTime = std::chrono::system_clock::now();
 		if (send(clientsocket, sendData.c_str(), sendData.length(), 0) <= 0)
 		{
-			printf("send data Error!, not last one package \n");
+			closesocket(clientsocket);
 			--totalClients;
+			g_mutex.lock();
+			lostClients++;
+			g_mutex.unlock();
+			std::cout << "send data Error!, not last one package   : " << lostClients << std::endl;
 			return;
 		}
 
 		char recvData[1024] = { 0 };
 		if (recv(clientsocket, (char*)recvData, sendData.length(), 0) < 0)
 		{
+			closesocket(clientsocket);
 			std::cout << "recv error !" << std::endl;
 			--totalClients;
+			g_mutex.lock();
+			lostClients++;
+			g_mutex.unlock();
+			std::cout << "recv error !  : " << lostClients << std::endl;
 			return;
 		}
 		auto millis = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - beforeTime).count();
@@ -108,20 +120,25 @@ int  main(int argc, char ** argv) {
 		return -1;
 	}
 
-	totalClients = THREAD_NUM;
+	totalClients = 0;
+	lostClients = 0;
 	std::thread AllThread[THREAD_NUM];
-	for (int i = 1; i < THREAD_NUM; i++)
-	{
-		AllThread[i] = std::thread(&ThreadCallBack, i);
-		std::this_thread::sleep_for(std::chrono::microseconds(1));
-	}
-	
-
 	while (true)
 	{
-		std::cout << "current living client nums: " << totalClients << std::endl;
-		std::this_thread::sleep_for(std::chrono::seconds(1800));
+		while (totalClients < THREAD_NUM)
+		{
+			AllThread[totalClients] = std::thread(&ThreadCallBack, totalClients);
+			std::this_thread::sleep_for(std::chrono::seconds(10));
+		}
+
+		while (true)
+		{
+
+			std::cout << "lost clients : " << lostClients << "   currrent total: " << totalClients << std::endl;
+			std::this_thread::sleep_for(std::chrono::seconds(10));
+		}
 	}
+
 	WSACleanup();
 	return 0;
 }
