@@ -24,14 +24,13 @@ void Task::ExecuteTask()
 	mFTaskRunCB(m_arg);
 }
 
-ThreadPool::ThreadPool() 
+WorkerThread::WorkerThread() 
 {
     TasksNumsLimitSize = -1;	// means unlimit
-    WorkThreadsNums = 0;
     bThreadPoolRunning = false;
 }
 
-ThreadPool::~ThreadPool()
+WorkerThread::~WorkerThread()
 {
     // Release resources
     if (bThreadPoolRunning != false) 
@@ -40,9 +39,9 @@ ThreadPool::~ThreadPool()
     }
 }
 
-void ThreadPool::ThreadCallBackFunc(void* arg)
+void WorkerThread::ThreadCallBackFunc(void* arg)
 {
-	ThreadPool* tp = (ThreadPool*)arg;
+	WorkerThread* tp = (WorkerThread*)arg;
 	if (!tp)
 	{
 		LOG_ERROR("thread pool is null");
@@ -51,77 +50,45 @@ void ThreadPool::ThreadCallBackFunc(void* arg)
 	tp->ExecuteThread();
 }
 
-bool ThreadPool::Start()
+bool WorkerThread::Start()
 {
-    if (WorkThreadsNums == 0) {
-		LOG_ERROR("pool size must be set!");
-        return false;
-    }
     if (bThreadPoolRunning == true) 
 	{
         LOG_WARN("ThreadPool has started, but call start thread once again");
         return true;
     }
-    bThreadPoolRunning = true;
-	for (int i = 0 ; i < WorkThreadsNums; ++i)
-	{
-		AllWorkThreads.push_back(std::thread(&ThreadPool::ThreadCallBackFunc, this, this));
-	}
 
+    bThreadPoolRunning = true;
+	mWorkerThread = std::thread(&WorkerThread::ThreadCallBackFunc, this, this);
     return true;
 }
 
-void ThreadPool::SetTaskSizeLimit(int size) 
+void WorkerThread::SetTaskSizeLimit(int size) 
 {
     TasksNumsLimitSize = size;
 }
 
-bool ThreadPool::SetWorkThreadNums(int ThreadNums)
+void WorkerThread::ReleaseThreadPool()
 {
-	if (ThreadNums <= 0 || ThreadNums >= MAX_THREAD_NUMS_THREAD_POOL)
-	{
-		return false;
-	}
-
-    WorkThreadsNums = ThreadNums;
-	return true;
-}
-
-void ThreadPool::ReleaseThreadPool()
-{
-	ThreadsSharedMutex.lock();
 	bThreadPoolRunning = false;
-	ThreadsSharedMutex.unlock();
 
-	LOG_DEBUG("Broadcasting STOP signal to all threads...");
-    ThreadSharedCondVar.notify_all(); // notify all threads we are shttung down
-
-	for (auto &m_thread : AllWorkThreads)
+	if (mWorkerThread.joinable())
 	{
-		if (m_thread.joinable())
-		{
-			m_thread.join();	
-			ThreadSharedCondVar.notify_all(); // try waking up a bunch of threads that are still waiting
-		}
-		else
-		{
-			std::stringstream ss;
-			ss << m_thread.get_id();
-			uint64_t id = std::stoull(ss.str());
-			LOG_WARN("thread ID: {} can not join ", id);
-		}
+		mWorkerThread.join();
 	}
-
-	LOG_DEBUG(" {}threads exited from the thread pool, task size: {} " , WorkThreadsNums, TasksQueue.size() );
+	else
+	{
+		std::stringstream ss;
+		ss << mWorkerThread.get_id();
+		uint64_t id = std::stoull(ss.str());
+		LOG_WARN("thread ID: {} can not join ", id);
+	}
 }
 
-void ThreadPool::ExecuteThread()
+void WorkerThread::ExecuteThread()
 {
 	while(bThreadPoolRunning != false) 
 	{
-		ThreadsSharedMutex.lock();
-		ThreadSharedCondVar.wait(ThreadsSharedMutex);
-
 		// If the thread was woken up to notify process shutdown, return from here
 		if (bThreadPoolRunning == false) 
 		{
@@ -139,28 +106,17 @@ void ThreadPool::ExecuteThread()
 			delete task;
 			TasksQueue.pop();
 		}
-
-		ThreadsSharedMutex.unlock();
 	}
-
 }
 
-bool ThreadPool::AddTask(Task *task)
+bool WorkerThread::AddTask(Task *task)
 {
-	ThreadsSharedMutex.lock();
-
     if (TasksNumsLimitSize > 0 && TasksQueue.size() > TasksNumsLimitSize) 
 	{
         LOG_WARN("task size reach limit: {}" , TasksNumsLimitSize);
-        ThreadsSharedMutex.unlock();
         return false;
     }
 
     TasksQueue.push(task);
-
-    ThreadSharedCondVar.notify_one(); // wake up one thread that is waiting for a task to be available
-
-	ThreadsSharedMutex.unlock();
-
     return true;
 }

@@ -20,7 +20,6 @@ struct stAddressInfo
 	uint32_t port;
 	uint32_t maxEvents;
 	uint32_t backlog;
-	uint32_t threadNums;
 
 	stAddressInfo()
 	{
@@ -28,7 +27,6 @@ struct stAddressInfo
 		port = 0;
 		maxEvents = 0;
 		backlog = 0;
-		threadNums = 0;
 	}
 };
 

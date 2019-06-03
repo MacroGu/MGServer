@@ -112,7 +112,7 @@ private:
 #endif
 		int ListenedSocket;
 
-        ThreadPool *ThreadPoolPtr;
+        WorkerThread *WorkerThreadPtr;
 
 		eEpollStatus EpollStatus;
 public:
@@ -127,7 +127,7 @@ public:
         
         void StopEpoll();
 
-        void SetThreadPoll(ThreadPool *tp);
+        void SetThreadPoll(WorkerThread *tp);
 
 		void SetAddressInfo(const stAddressInfo& addressInfo);
 		

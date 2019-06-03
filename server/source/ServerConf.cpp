@@ -141,10 +141,6 @@ bool ServerConf::LoadServerInfo(const std::string& fileDir, const std::string& a
 		{
 			serverInfo->backlog = atoi(value);
 		}
-		else if (strcmp(type, "threadNums") == 0)
-		{
-			serverInfo->threadNums = atoi(value);
-		}
 		else
 		{
 			std::cout << __FUNCTION__ << " : " << __LINE__ << "  server info conf type: " << type<< " value: " << value << std::endl;

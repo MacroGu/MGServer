@@ -48,10 +48,3 @@
 
 // buffer size
 #define MAX_WEBSOCKET_BUFFER 4096
-
-
-
-
-// max thread nums for thread pool
-#define MAX_THREAD_NUMS_THREAD_POOL 128
-

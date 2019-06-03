@@ -26,7 +26,7 @@
 
 EpollSocket::EpollSocket() 
 {
-    ThreadPoolPtr = NULL;
+    WorkerThreadPtr = NULL;
 	ListenedSocket = 0;
 	Watcher = nullptr;
 	EpollStatus = EPOLL_RUNNING;
@@ -41,10 +41,10 @@ EpollSocket::EpollSocket()
 
 EpollSocket::~EpollSocket() 
 {
-    if (ThreadPoolPtr != nullptr) 
+    if (WorkerThreadPtr != nullptr) 
 	{
-        delete ThreadPoolPtr;
-        ThreadPoolPtr = NULL;
+        delete WorkerThreadPtr;
+        WorkerThreadPtr = NULL;
     }
 #ifdef _WIN32
 	WSACleanup();
@@ -227,9 +227,9 @@ void EpollSocket::HandleWriteableEvent(int &epollfd, epoll_event &event, BaseSoc
 #endif // !_WIN32
 }
 
-void EpollSocket::SetThreadPoll(ThreadPool *tp) 
+void EpollSocket::SetThreadPoll(WorkerThread *tp) 
 {
-    this->ThreadPoolPtr = tp;
+    this->WorkerThreadPtr = tp;
 }
 
 void EpollSocket::SetAddressInfo(const stAddressInfo& addressInfo)
@@ -238,7 +238,6 @@ void EpollSocket::SetAddressInfo(const stAddressInfo& addressInfo)
 	this->AddressInfo.backlog = addressInfo.backlog;
 	this->AddressInfo.port = addressInfo.port;
 	this->AddressInfo.maxEvents = addressInfo.maxEvents;
-	this->AddressInfo.threadNums = addressInfo.threadNums;
 }
 
 void EpollSocket::SetSocketWatcher(BaseSocketWatcher* watcher)
@@ -254,14 +253,7 @@ void EpollSocket::SetSocketWatcher(BaseSocketWatcher* watcher)
 
 bool EpollSocket::InitThreadPool() 
 {
-   // LOG_INFO("thread pool not set, we will build for core size: %d" , core_size);
-	if (AddressInfo.threadNums <= 0)
-	{
-		LOG_ERROR("thread Nums configure error !");
-		return false;
-	}
-    ThreadPoolPtr = new ThreadPool();
-    ThreadPoolPtr->SetWorkThreadNums(AddressInfo.threadNums);
+    WorkerThreadPtr = new WorkerThread();
 
     return true;
 }
@@ -296,7 +288,7 @@ void EpollSocket::HandleEpollEvent(epoll_event &e)
         tdata->es = this;
 
         Task *task = new Task(std::bind(&EpollSocket::ReadTaskInThreads, this, tdata), tdata);
-        if (!ThreadPoolPtr->AddTask(task))
+        if (!WorkerThreadPtr->AddTask(task))
 		{
             LOG_WARN("add read task fail: ,we will close connect.");
             CloseAndReleaseOneEvent(e);
@@ -335,7 +327,7 @@ bool EpollSocket::CreateEpoll()
 
 bool EpollSocket::StartThreadPool() 
 {
-    if (ThreadPoolPtr == NULL) 
+    if (WorkerThreadPtr == NULL) 
 	{
 		if (!InitThreadPool())
 		{
@@ -343,7 +335,7 @@ bool EpollSocket::StartThreadPool()
 			return false;
 		}
     }
-    return ThreadPoolPtr->Start();
+    return WorkerThreadPtr->Start();
 }
 
 void EpollSocket::StartEpollEventLoop() 

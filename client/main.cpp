@@ -70,8 +70,6 @@ void ThreadCallBack(int threadID)
 
 int  main(int argc, char ** argv) {
 
-
-
 	WORD version = MAKEWORD(2, 2);
 	WSADATA data;
 

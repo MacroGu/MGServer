@@ -26,13 +26,14 @@ class Task
         void* m_arg;
 };
 
-
-class ThreadPool
+// 工作线程， 用于处理从主线程接收到的客户端数据
+// 服务器逻辑是单线程
+class WorkerThread
 {
 public:
 
-        ThreadPool();
-        ~ThreadPool();
+        WorkerThread();
+        ~WorkerThread();
 
         bool Start();
 
@@ -40,8 +41,6 @@ public:
         bool AddTask(Task *task);
 
 		void SetTaskSizeLimit(int size);
-
-        bool SetWorkThreadNums(int threadNums);
 
 private:
 
@@ -56,24 +55,15 @@ private:
 
 private:
 
-		// 全部工作线程的数量 
-		uint8_t WorkThreadsNums;
-		
-		// 线程池共享的互斥锁
-		std::mutex ThreadsSharedMutex;
-
-		// 线程池共享的条件变量
-		std::condition_variable_any ThreadSharedCondVar;
-
-		// 线程池全部的工作线程
-		std::vector<std::thread> AllWorkThreads;
+		// 工作线程
+		std::thread mWorkerThread;
 
 		// 需要线程池处理的任务队列
         std::queue<Task *> TasksQueue;
 
-		// ture: 表面线程池正在运行  false: 表面 线程池停止运行
+		// ture: 表面线程池正在运行  false: 表面 线程停止运行
 		bool bThreadPoolRunning;
 
-		// 线程池 能同时处理的最大 task 的数量
+		// 线程 能同时处理的最大 task 的数量
         uint32_t TasksNumsLimitSize;
 };
