@@ -37,7 +37,7 @@ using json = nlohmann::json;
 
 
 #define SUM_TOTAL 1000
-#define THREAD_NUM 0
+#define THREAD_NUM 1
 
 
 char  buffer[BUFFERSIZE];
@@ -66,6 +66,28 @@ void ThreadCallBack(int threadID)
 		printf("Connect fail!\n");
 		return;
 	}
+
+	std::string sendData = "test client data 1";
+
+	while (true)
+	{
+		auto beforeTime = std::chrono::system_clock::now();
+		if (send(clientsocket, sendData.c_str(), sendData.length(), 0) <= 0)
+		{
+			printf("send data Error!, not last one package \n");
+			return;
+		}
+
+		char recvData[1024] = { 0 };
+		if (recv(clientsocket, (char*)recvData, sendData.length(), 0) < 0)
+		{
+			std::cout << "recv error !" << std::endl;
+		}
+
+		std::string receivedData = std::string(recvData);
+		auto millis = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - beforeTime).count();
+
+	}
 }
 
 int  main(int argc, char ** argv) {
@@ -78,12 +100,12 @@ int  main(int argc, char ** argv) {
 		return -1;
 	}
 
-// 	std::thread AllThread[THREAD_NUM];
-// 	for (int i = 1; i < THREAD_NUM; i++)
-// 	{
-// 		AllThread[i] = std::thread(&ThreadCallBack, i);
-// 		std::this_thread::sleep_for(std::chrono::microseconds(1));
-// 	}
+	std::thread AllThread[THREAD_NUM];
+	for (int i = 1; i < THREAD_NUM; i++)
+	{
+		AllThread[i] = std::thread(&ThreadCallBack, i);
+		std::this_thread::sleep_for(std::chrono::microseconds(1));
+	}
 	
 	ThreadCallBack(0);
 
