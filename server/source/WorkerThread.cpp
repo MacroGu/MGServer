@@ -68,6 +68,11 @@ void WorkerThread::SetTaskSizeLimit(int size)
     TasksNumsLimitSize = size;
 }
 
+void WorkerThread::SetThreadCallBackTime(uint32_t mTime)
+{
+	ThreadCallBackTime = mTime;
+}
+
 void WorkerThread::ReleaseThreadPool()
 {
 	bThreadPoolRunning = false;
@@ -87,36 +92,85 @@ void WorkerThread::ReleaseThreadPool()
 
 void WorkerThread::ExecuteThread()
 {
-	while(bThreadPoolRunning != false) 
+	if (ThreadCallBackTime == 0)		// 只要有 task， 就会产生回调
 	{
-		// If the thread was woken up to notify process shutdown, return from here
-		if (bThreadPoolRunning == false) 
+		while (bThreadPoolRunning != false)
 		{
-			std::stringstream ss;
-			ss << std::this_thread::get_id();
-			uint64_t id = std::stoull(ss.str());
-			LOG_WARN("thread ID: {} can not join ", id);
-			return ;
-		}
+			ThreadsSharedMutex.lock();
+			ThreadSharedCondVar.wait(ThreadsSharedMutex);
 
-		while(!TasksQueue.empty())
-		{
-			Task* task = TasksQueue.front();
-			task->ExecuteTask(); // execute the task
-			delete task;
-			TasksQueue.pop();
+			while (!TasksQueue.empty())
+			{
+				Task* task = TasksQueue.front();
+				task->ExecuteTask(); // execute the task
+				delete task;
+				TasksQueue.pop();
+			}
+
+			ThreadsSharedMutex.unlock();
 		}
 	}
+	else			// 定时回调
+	{
+		while (bThreadPoolRunning != false)
+		{
+			auto nowTime = std::chrono::steady_clock::now();
+			while (!TasksQueue.empty())
+			{
+				ThreadsSharedMutex.lock();
+				Task* task = TasksQueue.front();
+				if (!task)
+				{
+					LOG_WARN("task is nullptr");
+					continue;
+				}
+				stAcceptTaskData* td = (stAcceptTaskData*)(task->getArgs());
+
+				auto secondsDuring = std::chrono::steady_clock::now() - td->acceptTime;
+				if (double(secondsDuring.count()) * std::chrono::microseconds::period::num / std::chrono::microseconds::period::den > 6000)
+				{
+					task->ExecuteTask(); // execute the task
+					delete task;
+					TasksQueue.pop();
+				}
+				ThreadsSharedMutex.unlock();
+			}
+			std::this_thread::sleep_for(std::chrono::microseconds(10));
+		}
+	}
+
 }
 
 bool WorkerThread::AddTask(Task *task)
 {
-    if (TasksNumsLimitSize > 0 && TasksQueue.size() > TasksNumsLimitSize) 
+	if (ThreadCallBackTime == 0)
 	{
-        LOG_WARN("task size reach limit: {}" , TasksNumsLimitSize);
-        return false;
-    }
+		ThreadsSharedMutex.lock();
+		if (TasksNumsLimitSize > 0 && TasksQueue.size() > TasksNumsLimitSize)
+		{
+			LOG_WARN("task size reach limit: {}", TasksNumsLimitSize);
+			ThreadsSharedMutex.unlock();
+			return false;
+		}
 
-    TasksQueue.push(task);
+		TasksQueue.push(task);
+
+		ThreadSharedCondVar.notify_one(); // wake up one thread that is waiting for a task to be available
+		ThreadsSharedMutex.unlock();
+	}
+	else
+	{
+		ThreadsSharedMutex.lock();
+		if (TasksNumsLimitSize > 0 && TasksQueue.size() > TasksNumsLimitSize)
+		{
+			LOG_WARN("task size reach limit: {}", TasksNumsLimitSize);
+			ThreadsSharedMutex.unlock();
+			return false;
+		}
+
+		TasksQueue.push(task);
+		ThreadsSharedMutex.unlock();
+	}
+
     return true;
 }

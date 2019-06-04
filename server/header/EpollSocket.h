@@ -6,7 +6,6 @@
 
 
 #pragma once
-
 #ifndef _WIN32
 #include <sys/epoll.h>
 #include <sys/socket.h>
@@ -19,10 +18,16 @@
 #include <vector>
 #include <set>
 #include <string>
+#include <chrono>
 #include <stdint.h>
 #include "WorkerThread.h"
 #include "defines.h"
 
+
+class WorkerThread;
+class Task;
+struct stWorkerTaskData;
+struct stAcceptTaskData;
 
 struct stSocketContext 			// some connected clients info
 {
@@ -81,15 +86,17 @@ private:
 
         bool BindOnAddress(const stAddressInfo& addressInfo);
 
-        void HandleAcceptEvent(int &epollfd, epoll_event &event, BaseSocketWatcher &socket_watcher);
+		// 如果建立连接成功返回此socket 的fd
+		// 否则返回 -1 
+        int HandleAcceptEvent(int &epollfd, epoll_event &event, BaseSocketWatcher &socket_watcher);
 
         void HandleWriteableEvent(int &epollfd, epoll_event &event, BaseSocketWatcher &socket_watcher);
 
         void CloseAndReleaseOneEvent(epoll_event &event);
 
-        bool InitThreadPool();
+        bool InitWorkerThread();
 
-        bool StartThreadPool();
+        bool StartWorkerThread();
 
         bool CreateEpoll();
 
@@ -99,7 +106,10 @@ private:
 
         void StartEpollEventLoop();
 
-		void ReadTaskInThreads(void* data);
+		// 消息处理线程回调
+		void DataDealThreadCallBack(void* data);
+		// 建立连接线程回调
+		void AcceptThreadCallBack(void* data);
 
 		stAddressInfo AddressInfo;
 
@@ -112,8 +122,10 @@ private:
 #endif
 		int ListenedSocket;
 
-        WorkerThread *WorkerThreadPtr;
-
+		WorkerThread* MsgDealThreadPtr;			// 消息处理线程
+		WorkerThread* AcceptThreadPtr;			// 连接处理线程
+		std::mutex gMutex;						// 三个线程共享的 mutx， 轻易不要用
+		std::set<int> WaitAcceptFd;				// 首次建立连接的时候， 会将其加入，2s 内不发送数据，则会将其断开
 		eEpollStatus EpollStatus;
 public:
 
@@ -121,6 +133,7 @@ public:
        
          ~EpollSocket();
         
+		// 处理接收数据事件
         void HandleEpollReadableEvent(epoll_event &event);
 
         bool StartEpoll();
@@ -131,10 +144,3 @@ public:
 		
 		void SetSocketWatcher(BaseSocketWatcher* watcher);
 };
-
-struct TaskData 
-{
-    epoll_event event;
-    EpollSocket *es;
-};
-

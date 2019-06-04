@@ -26,7 +26,8 @@
 
 EpollSocket::EpollSocket() 
 {
-    WorkerThreadPtr = nullptr;
+    MsgDealThreadPtr = nullptr;
+	AcceptThreadPtr = nullptr;
 	ListenedSocket = 0;
 	Watcher = nullptr;
 	EpollStatus = EPOLL_RUNNING;
@@ -41,11 +42,17 @@ EpollSocket::EpollSocket()
 
 EpollSocket::~EpollSocket() 
 {
-    if (WorkerThreadPtr != nullptr) 
+    if (MsgDealThreadPtr != nullptr) 
 	{
-        delete WorkerThreadPtr;
-        WorkerThreadPtr = nullptr;
+        delete MsgDealThreadPtr;
+        MsgDealThreadPtr = nullptr;
     }
+
+	if (AcceptThreadPtr != nullptr)
+	{
+		delete AcceptThreadPtr;
+		AcceptThreadPtr = nullptr;
+	}
 #ifdef _WIN32
 	WSACleanup();
 #endif // _WIN32
@@ -123,46 +130,63 @@ int EpollSocket::AcceptConnectSocket(int sockfd, std::string &client_ip)
     return new_fd;
 }
 
-void EpollSocket::HandleAcceptEvent(int &epollfd, epoll_event &event, BaseSocketWatcher &socket_handler) 
+void EpollSocket::AcceptThreadCallBack(void* data)
 {
-    int sockfd = event.data.fd;
+	stAcceptTaskData* td = (stAcceptTaskData*)data;
+	if (td == nullptr)
+	{
+		LOG_ERROR("call back data is nullptr");
+		return;
+	}
 
-    std::string client_ip;
-    int conn_sock = AcceptConnectSocket(sockfd, client_ip);
-    if (-1 == conn_sock) 
+	// epoll_ctl(_epollfd, EPOLL_CTL_DEL, td->event.data.fd, NULL);			// 这个操作要不要枷锁？
+	// closesocket(td->event.data.fd);
+	td->es->CloseAndReleaseOneEvent(td->event);
+
+}
+
+int EpollSocket::HandleAcceptEvent(int& epollfd, epoll_event& event, BaseSocketWatcher& socket_handler)
+{
+	int sockfd = event.data.fd;
+
+	std::string client_ip;
+	int conn_sock = AcceptConnectSocket(sockfd, client_ip);
+	if (-1 == conn_sock)
 	{
 		LOG_ERROR("AcceptConnectSocket failed!");
-        return;
-    }
+		return -1;
+	}
 	if (0 != SetNonBlocking(conn_sock))
 	{
 		LOG_ERROR("set conn sock nonblocking failed!");
-		return;
+		return -1;
 	}
 
-    LOG_DEBUG("get accept socket which listen fd: {}, conn_sock_fd: {}" , sockfd , conn_sock);
+	LOG_DEBUG("get accept socket which listen fd: {}, conn_sock_fd: {}", sockfd, conn_sock);
 
-    stSocketContext *socket_context = new stSocketContext();
-    socket_context->fd = conn_sock;
-    socket_context->client_ip = client_ip;
+	stSocketContext* socket_context = new stSocketContext();
+	socket_context->fd = conn_sock;
+	socket_context->client_ip = client_ip;
 
-    socket_handler.OnEpollAcceptEvent(*socket_context);
+	socket_handler.OnEpollAcceptEvent(*socket_context);
 
-    struct epoll_event conn_sock_ev;
-    conn_sock_ev.events = EPOLLIN | EPOLLONESHOT;
-    conn_sock_ev.data.ptr = socket_context;
+	struct epoll_event conn_sock_ev;
+	conn_sock_ev.events = EPOLLIN | EPOLLONESHOT;
+	conn_sock_ev.data.ptr = socket_context;
 
-    if (epoll_ctl(_epollfd, EPOLL_CTL_ADD, conn_sock, &conn_sock_ev) == -1) 
+	if (epoll_ctl(_epollfd, EPOLL_CTL_ADD, conn_sock, &conn_sock_ev) == -1)
 	{
-        LOG_ERROR("epoll_ctl: conn_sock: {}" , strerror(errno));
-        CloseAndReleaseOneEvent(event);
-		return;
+		LOG_ERROR("epoll_ctl: conn_sock: {}", strerror(errno));
+		CloseAndReleaseOneEvent(event);
+		return -1;
 	}
+
+	return conn_sock;
 }
 
-void EpollSocket::ReadTaskInThreads(void* data)
+void EpollSocket::DataDealThreadCallBack(void* data)
 {
-    TaskData *td = (TaskData *) data;
+    stWorkerTaskData *td = (stWorkerTaskData *) data;
     td->es->HandleEpollReadableEvent(td->event);
     delete td;
 }
@@ -247,15 +271,26 @@ void EpollSocket::SetSocketWatcher(BaseSocketWatcher* watcher)
 	this->Watcher = watcher;
 }
 
-bool EpollSocket::InitThreadPool() 
+bool EpollSocket::InitWorkerThread() 
 {
-    WorkerThreadPtr = new WorkerThread();
+    MsgDealThreadPtr = new WorkerThread();
 
-	if (!WorkerThreadPtr)
+	if (!MsgDealThreadPtr)
 	{
 		LOG_ERROR("create worker thread failed!");
+		return false;
 	}
-	WorkerThreadPtr->SetTaskSizeLimit(AddressInfo.WorkerThreadTaskMax);
+	MsgDealThreadPtr->SetTaskSizeLimit(AddressInfo.WorkerThreadTaskMax);
+	MsgDealThreadPtr->SetThreadCallBackTime(0);
+
+	AcceptThreadPtr = new WorkerThread();
+	if (!AcceptThreadPtr)
+	{
+		LOG_ERROR("create Accept thread failed!");
+		return false;
+	}
+	AcceptThreadPtr->SetTaskSizeLimit(AddressInfo.WorkerThreadTaskMax);
+	AcceptThreadPtr->SetThreadCallBackTime(2);
 
     return true;
 }
@@ -278,19 +313,33 @@ void EpollSocket::HandleEpollEvent(epoll_event &e)
 {
     if (e.data.fd == ListenedSocket)		// 仅仅建立连接的时候进行判断，因为只有此时fd才和server 的监听fd 相等
 	{
-        // accept connection
-		this->HandleAcceptEvent((int&)_epollfd, e, *Watcher);
+ 		int cliendFd = this->HandleAcceptEvent((int&)_epollfd, e, *Watcher);
+		if (cliendFd != -1)
+		{
+			stAcceptTaskData* tdata = new stAcceptTaskData();
+			tdata->event = e;
+			tdata->es = this;
+			tdata->acceptTime = std::chrono::steady_clock::now();
+			Task* task = new Task(std::bind(&EpollSocket::AcceptThreadCallBack, this, tdata), tdata);
+			if (!AcceptThreadPtr->AddTask(task))
+			{
+				LOG_WARN("add read task fail: ,we will close connect.");
+				CloseAndReleaseOneEvent(e);
+				delete tdata;
+				delete task;
+			}
+		}
     } 
 	else if (e.events & EPOLLIN) 
 	{
         // handle readable async
         //LOG_DEBUG("start handle readable event");
-        TaskData *tdata = new TaskData();
+        stWorkerTaskData *tdata = new stWorkerTaskData();
         tdata->event = e;
         tdata->es = this;
 
-        Task *task = new Task(std::bind(&EpollSocket::ReadTaskInThreads, this, tdata), tdata);
-        if (!WorkerThreadPtr->AddTask(task))
+        Task *task = new Task(std::bind(&EpollSocket::DataDealThreadCallBack, this, tdata), tdata);
+        if (!MsgDealThreadPtr->AddTask(task))
 		{
             LOG_WARN("add read task fail: ,we will close connect.");
             CloseAndReleaseOneEvent(e);
@@ -327,17 +376,26 @@ bool EpollSocket::CreateEpoll()
     return true;
 }
 
-bool EpollSocket::StartThreadPool() 
+bool EpollSocket::StartWorkerThread() 
 {
-    if (WorkerThreadPtr == NULL) 
+    if (MsgDealThreadPtr == NULL) 
 	{
-		if (!InitThreadPool())
+		if (!InitWorkerThread())
 		{
 			LOG_ERROR("initial thread pool failed!");
 			return false;
 		}
     }
-    return WorkerThreadPtr->Start();
+
+	if (AcceptThreadPtr == NULL)
+	{
+		if (!InitWorkerThread())
+		{
+			LOG_ERROR("initial thread pool failed!");
+			return false;
+		}
+	}
+    return MsgDealThreadPtr->Start() && AcceptThreadPtr->Start();
 }
 
 void EpollSocket::StartEpollEventLoop() 
@@ -378,7 +436,7 @@ bool EpollSocket::StartEpoll()
 
 	do
 	{
-		ret = StartThreadPool();
+		ret = StartWorkerThread();
 		if (!ret) break;
 
 		ret = BindOnAddress(AddressInfo);
@@ -422,7 +480,7 @@ void EpollSocket::CloseAndReleaseOneEvent(epoll_event &epoll_event)
 
     int fd = hc->fd;
     epoll_event.events = EPOLLIN | EPOLLOUT;
-    epoll_ctl(_epollfd, EPOLL_CTL_DEL, fd, &epoll_event);
+    epoll_ctl(_epollfd, EPOLL_CTL_DEL, fd, &epoll_event);			// 这个操作要不要枷锁？
 
     delete (stSocketContext *) epoll_event.data.ptr;
     epoll_event.data.ptr = NULL;
