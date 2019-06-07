@@ -27,13 +27,13 @@ void Task::ExecuteTask()
 WorkerThread::WorkerThread() 
 {
     TasksNumsLimitSize = -1;	// means unlimit
-    bThreadPoolRunning = false;
+    bThreadRunning = false;
 }
 
 WorkerThread::~WorkerThread()
 {
     // Release resources
-    if (bThreadPoolRunning != false) 
+    if (bThreadRunning != false) 
 	{
         ReleaseThreadPool();
     }
@@ -52,13 +52,13 @@ void WorkerThread::ThreadCallBackFunc(void* arg)
 
 bool WorkerThread::Start()
 {
-    if (bThreadPoolRunning == true) 
+    if (bThreadRunning == true) 
 	{
         LOG_WARN("ThreadPool has started, but call start thread once again");
         return true;
     }
 
-    bThreadPoolRunning = true;
+    bThreadRunning = true;
 	mWorkerThread = std::thread(&WorkerThread::ThreadCallBackFunc, this, this);
     return true;
 }
@@ -75,7 +75,7 @@ void WorkerThread::SetThreadCallBackTime(uint32_t mTime)
 
 void WorkerThread::ReleaseThreadPool()
 {
-	bThreadPoolRunning = false;
+	bThreadRunning = false;
 
 	if (mWorkerThread.joinable())
 	{
@@ -94,7 +94,7 @@ void WorkerThread::ExecuteThread()
 {
 	if (ThreadCallBackTime == 0)		// 只要有 task， 就会产生回调
 	{
-		while (bThreadPoolRunning != false)
+		while (bThreadRunning != false)
 		{
 			ThreadsSharedMutex.lock();
 			ThreadSharedCondVar.wait(ThreadsSharedMutex);
@@ -112,7 +112,7 @@ void WorkerThread::ExecuteThread()
 	}
 	else			// 定时回调
 	{
-		while (bThreadPoolRunning != false)
+		while (bThreadRunning != false)
 		{
 			auto nowTime = std::chrono::steady_clock::now();
 			while (!TasksQueue.empty())
@@ -127,7 +127,7 @@ void WorkerThread::ExecuteThread()
 				stAcceptTaskData* td = (stAcceptTaskData*)(task->getArgs());
 
 				auto secondsDuring = std::chrono::steady_clock::now() - td->acceptTime;
-				if (double(secondsDuring.count()) * std::chrono::microseconds::period::num / std::chrono::microseconds::period::den > 6000)
+				if (double(secondsDuring.count()) * std::chrono::microseconds::period::num / std::chrono::microseconds::period::den > ThreadCallBackTime)
 				{
 					task->ExecuteTask(); // execute the task
 					delete task;

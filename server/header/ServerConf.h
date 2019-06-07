@@ -21,6 +21,7 @@ struct stAddressInfo
 	uint32_t maxEvents;
 	uint32_t backlog;
 	uint32_t WorkerThreadTaskMax;
+	uint32_t timeCheckAcceptClient;
 
 	stAddressInfo()
 	{
@@ -29,6 +30,7 @@ struct stAddressInfo
 		maxEvents = 0;
 		backlog = 0;
 		WorkerThreadTaskMax = 0;
+		timeCheckAcceptClient = 0;
 	}
 };
 

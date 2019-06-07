@@ -21,8 +21,8 @@
 #include <cerrno>
 #include <errno.h>
 #include <string.h>
-#include "EpollSocket.h"
 #include <iostream>
+#include "EpollSocket.h"
 
 EpollSocket::EpollSocket() 
 {
@@ -132,6 +132,8 @@ int EpollSocket::AcceptConnectSocket(int sockfd, std::string &client_ip)
 
 void EpollSocket::AcceptThreadCallBack(void* data)
 {
+	// 到这里的，都是经过 连接线程确认， 超时的 客户端
+
 	stAcceptTaskData* td = (stAcceptTaskData*)data;
 	if (td == nullptr)
 	{
@@ -139,13 +141,10 @@ void EpollSocket::AcceptThreadCallBack(void* data)
 		return;
 	}
 
-	// epoll_ctl(_epollfd, EPOLL_CTL_DEL, td->event.data.fd, NULL);			// 这个操作要不要枷锁？
-	// closesocket(td->event.data.fd);
-	td->es->CloseAndReleaseOneEvent(td->event);
-
+	CloseAndReleaseOneEvent(td->acceptedEvent);
 }
 
-int EpollSocket::HandleAcceptEvent(int& epollfd, epoll_event& event, BaseSocketWatcher& socket_handler)
+bool EpollSocket::HandleAcceptEvent(int& epollfd, epoll_event& event, BaseSocketWatcher& socket_handler, epoll_event& accepted_event)
 {
 	int sockfd = event.data.fd;
 
@@ -154,12 +153,12 @@ int EpollSocket::HandleAcceptEvent(int& epollfd, epoll_event& event, BaseSocketW
 	if (-1 == conn_sock)
 	{
 		LOG_ERROR("AcceptConnectSocket failed!");
-		return -1;
+		return false;
 	}
 	if (0 != SetNonBlocking(conn_sock))
 	{
 		LOG_ERROR("set conn sock nonblocking failed!");
-		return -1;
+		return false;
 	}
 
 	LOG_DEBUG("get accept socket which listen fd: {}, conn_sock_fd: {}", sockfd, conn_sock);
@@ -170,18 +169,17 @@ int EpollSocket::HandleAcceptEvent(int& epollfd, epoll_event& event, BaseSocketW
 
 	socket_handler.OnEpollAcceptEvent(*socket_context);
 
-	struct epoll_event conn_sock_ev;
-	conn_sock_ev.events = EPOLLIN | EPOLLONESHOT;
-	conn_sock_ev.data.ptr = socket_context;
+	accepted_event.events = EPOLLIN | EPOLLONESHOT;
+	accepted_event.data.ptr = socket_context;
 
-	if (epoll_ctl(_epollfd, EPOLL_CTL_ADD, conn_sock, &conn_sock_ev) == -1)
+	if (epoll_ctl(_epollfd, EPOLL_CTL_ADD, conn_sock, &accepted_event) == -1)
 	{
 		LOG_ERROR("epoll_ctl: conn_sock: {}", strerror(errno));
 		CloseAndReleaseOneEvent(event);
-		return -1;
+		return false;
 	}
 
-	return conn_sock;
+	return true;
 }
 
 void EpollSocket::DataDealThreadCallBack(void* data)
@@ -258,6 +256,7 @@ void EpollSocket::SetAddressInfo(const stAddressInfo& addressInfo)
 	this->AddressInfo.port = addressInfo.port;
 	this->AddressInfo.maxEvents = addressInfo.maxEvents;
 	this->AddressInfo.WorkerThreadTaskMax = addressInfo.WorkerThreadTaskMax;
+	this->AddressInfo.timeCheckAcceptClient = addressInfo.timeCheckAcceptClient;
 }
 
 void EpollSocket::SetSocketWatcher(BaseSocketWatcher* watcher)
@@ -290,7 +289,7 @@ bool EpollSocket::InitWorkerThread()
 		return false;
 	}
 	AcceptThreadPtr->SetTaskSizeLimit(AddressInfo.WorkerThreadTaskMax);
-	AcceptThreadPtr->SetThreadCallBackTime(2);
+	AcceptThreadPtr->SetThreadCallBackTime(AddressInfo.timeCheckAcceptClient);
 
     return true;
 }
@@ -313,12 +312,9 @@ void EpollSocket::HandleEpollEvent(epoll_event &e)
 {
     if (e.data.fd == ListenedSocket)		// 仅仅建立连接的时候进行判断，因为只有此时fd才和server 的监听fd 相等
 	{
- 		int cliendFd = this->HandleAcceptEvent((int&)_epollfd, e, *Watcher);
-		if (cliendFd != -1)
+		stAcceptTaskData* tdata = new stAcceptTaskData();
+		if (HandleAcceptEvent((int&)_epollfd, e, *Watcher, tdata->acceptedEvent))
 		{
-			stAcceptTaskData* tdata = new stAcceptTaskData();
-			tdata->event = e;
-			tdata->es = this;
 			tdata->acceptTime = std::chrono::steady_clock::now();
 			Task* task = new Task(std::bind(&EpollSocket::AcceptThreadCallBack, this, tdata), tdata);
 			if (!AcceptThreadPtr->AddTask(task))
@@ -328,6 +324,7 @@ void EpollSocket::HandleEpollEvent(epoll_event &e)
 				delete tdata;
 				delete task;
 			}
+
 		}
     } 
 	else if (e.events & EPOLLIN) 

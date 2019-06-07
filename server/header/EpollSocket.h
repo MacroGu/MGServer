@@ -17,6 +17,7 @@
 #endif // !_WIN32
 #include <vector>
 #include <set>
+#include <map>
 #include <string>
 #include <chrono>
 #include <stdint.h>
@@ -43,13 +44,6 @@ public:
 		client_ip = "";
 		uiMessageID = 0;
 		stToClient = "";
-	}
-
-	~stSocketContext()
-	{
-		fd = 0;
-		client_ip = "";
-		uiMessageID = 0;
 	}
 };
 
@@ -86,9 +80,8 @@ private:
 
         bool BindOnAddress(const stAddressInfo& addressInfo);
 
-		// 如果建立连接成功返回此socket 的fd
-		// 否则返回 -1 
-        int HandleAcceptEvent(int &epollfd, epoll_event &event, BaseSocketWatcher &socket_watcher);
+		// 如果建立连接成功返回true, 且获取七 epoll_event， 否则返回 false
+        bool HandleAcceptEvent(int &epollfd, epoll_event &event, BaseSocketWatcher &socket_watcher, epoll_event& accepted_event);
 
         void HandleWriteableEvent(int &epollfd, epoll_event &event, BaseSocketWatcher &socket_watcher);
 
@@ -127,6 +120,16 @@ private:
 		std::mutex gMutex;						// 三个线程共享的 mutx， 轻易不要用
 		std::set<int> WaitAcceptFd;				// 首次建立连接的时候， 会将其加入，2s 内不发送数据，则会将其断开
 		eEpollStatus EpollStatus;
+
+private:
+	// 加锁会影响效率， 不加锁的方法， 原理， 每个线程对自己的容器有读写权限，其他线程只有读权限， 
+	/*
+		MsgDealThreadPtr  对 AllDealClients  有R/W权限
+		AcceptThreadPtr   对 AllAcceptedClients 有 R/W 权限， 对 AllDealClients 仅 读的权限
+	*/
+		std::map<int, epoll_event> AllDealClients;			// 所有建立连接且发了消息的的客户端，需要进行逻辑处理的客户端
+		std::map<int, epoll_event> AllAcceptedClients;		// 所有只建立连接，且未发消息来的客户端
+
 public:
 
         EpollSocket();
