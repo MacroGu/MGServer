@@ -71,6 +71,7 @@ int GameSocketWatcher::OnEpollWriteableEvent(stSocketContext &socket_context)
 	{
 		LOG_ERROR("send data to client failed ! client fd:  client IP: {}", 
 				client_fd, socket_context.client_ip);
+		return WRITE_CONN_CLOSE;
 	}
 
 	return WRITE_CONN_ALIVE;

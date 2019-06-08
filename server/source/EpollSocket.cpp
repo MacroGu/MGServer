@@ -173,7 +173,12 @@ bool EpollSocket::HandleAcceptEvent(int& epollfd, epoll_event& event, BaseSocket
 
 	socket_handler.OnEpollAcceptEvent(*socket_context);
 
+#ifdef _WIN32
 	accepted_event.events = EPOLLIN | EPOLLONESHOT;
+#else
+	accepted_event.events = EPOLLIN | EPOLLET | EPOLLONESHOT;
+#endif
+
 	accepted_event.data.ptr = socket_context;
 
 	if (epoll_ctl(_epollfd, EPOLL_CTL_ADD, conn_sock, &accepted_event) == -1)
@@ -206,19 +211,19 @@ void EpollSocket::HandleEpollReadableEvent(epoll_event &event)
         CloseAndReleaseOneEvent(event);
 		return;
     }
-    if (ret == READ_CONTINUE) 
-	{
-        event.events = EPOLLIN | EPOLLONESHOT;
-        epoll_ctl(_epollfd, EPOLL_CTL_MOD, fd, &event);
-    } else if (ret == READ_OVER) 
-	{ // READ_OVER
-        event.events = EPOLLOUT | EPOLLONESHOT;
-        epoll_ctl(_epollfd, EPOLL_CTL_MOD, fd, &event);
-    } else 
-	{
-        LOG_ERROR("Unknown read ret: {}" ,  ret);
-		return;
-    }
+//     if (ret == READ_CONTINUE) 
+// 	{
+//         event.events = EPOLLIN | EPOLLONESHOT;
+//         epoll_ctl(_epollfd, EPOLL_CTL_MOD, fd, &event);
+//     } else if (ret == READ_OVER) 
+// 	{ // READ_OVER
+//         event.events = EPOLLOUT | EPOLLONESHOT;
+//         epoll_ctl(_epollfd, EPOLL_CTL_MOD, fd, &event);
+//     } else 
+// 	{
+//         LOG_ERROR("Unknown read ret: {}" ,  ret);
+// 		return;
+//     }
 }
 
 void EpollSocket::HandleWriteableEvent(int &epollfd, epoll_event &event, BaseSocketWatcher &socket_handler) {
@@ -300,7 +305,12 @@ bool EpollSocket::InitWorkerThread()
 bool EpollSocket::AddListenSocketToEpoll() 
 {
 	struct epoll_event ev;
+
+#ifdef _WIN32
 	ev.events = EPOLLIN;
+#else
+	ev.events = EPOLLIN | EPOLLET; // ET
+#endif
 	ev.data.fd = ListenedSocket;
 	if (epoll_ctl(_epollfd, EPOLL_CTL_ADD, ListenedSocket, &ev) == -1)
 	{
