@@ -356,8 +356,14 @@ void EpollSocket::HandleEpollEvent(epoll_event &e)
             delete tdata;
             delete task;
         }
-
-		AllConnectedClients.insert(std::make_pair(e.data.fd, e));
+		else
+		{
+			int clientfd = e.data.fd;
+			if (AllConnectedClients.find(clientfd) == AllConnectedClients.end())
+			{
+				AllConnectedClients.insert(std::make_pair(e.data.fd, e));
+			}
+		}
     } 
 	else if (e.events & EPOLLOUT) 
 	{
