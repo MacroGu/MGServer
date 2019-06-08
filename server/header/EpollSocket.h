@@ -25,8 +25,10 @@
 #include "defines.h"
 
 
-class WorkerThread;
 class Task;
+class BaseThread;
+class DealThread;
+class AcceptThread;
 struct stWorkerTaskData;
 struct stAcceptTaskData;
 
@@ -115,8 +117,8 @@ private:
 #endif
 		int ListenedSocket;
 
-		WorkerThread* MsgDealThreadPtr;			// 消息处理线程
-		WorkerThread* AcceptThreadPtr;			// 连接处理线程
+		BaseThread* MsgDealThreadPtr;			// 消息处理线程
+		BaseThread* AcceptThreadPtr;			// 连接处理线程
 		std::mutex gMutex;						// 三个线程共享的 mutx， 轻易不要用
 		std::set<int> WaitAcceptFd;				// 首次建立连接的时候， 会将其加入，2s 内不发送数据，则会将其断开
 		eEpollStatus EpollStatus;
@@ -127,8 +129,7 @@ private:
 		MsgDealThreadPtr  对 AllDealClients  有R/W权限
 		AcceptThreadPtr   对 AllAcceptedClients 有 R/W 权限， 对 AllDealClients 仅 读的权限
 	*/
-		std::map<int, epoll_event> AllDealClients;			// 所有建立连接且发了消息的的客户端，需要进行逻辑处理的客户端
-		std::map<int, epoll_event> AllAcceptedClients;		// 所有只建立连接，且未发消息来的客户端
+		std::map<int, epoll_event> AllConnectedClients;			// 所有建立连接且发了消息的的客户端，需要进行逻辑处理的客户端
 
 public:
 

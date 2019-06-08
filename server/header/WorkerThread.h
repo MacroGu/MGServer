@@ -47,10 +47,20 @@ struct stAcceptTaskData
 class BaseThread
 {
 public:
-	virtual bool Start() = 0;
+	BaseThread();
+	virtual ~BaseThread();
+
+public:
+	virtual bool Start();
+	virtual void Stop();
 	virtual bool AddTask(Task* task) = 0;
+	// 执行线程 
+	virtual void ExecuteThread() = 0;
+	// the thread's call back function
+	virtual void ThreadCallBackFunc(void* arg) = 0;
 	virtual void SetTaskSizeLimit(int size) { TasksNumsLimitSize = size; }
 	virtual void SetThreadCallBackTime(uint32_t mTime) { ThreadCallBackTime = mTime; }
+
 
 protected:
 	// 需要线程池处理的任务队列
@@ -66,59 +76,45 @@ protected:
 	// 0: 表示只要task 队列中有数据， 就进行回调处理
 	// >0 : 就是定时回调需要的时间间隔
 	uint32_t ThreadCallBackTime;
+
+	// 线程
+	std::thread mThread;
+	// 线程池共享的互斥锁
+	std::mutex ThreadsSharedMutex;
+	// 线程池共享的条件变量
+	std::condition_variable_any ThreadSharedCondVar;
+};
+
+// 当有task 的时候就执行， 不会在queue 非空的时候进行等待
+class DealThread : public BaseThread
+{
+public:
+	DealThread();
+	~DealThread();
+
+public:
+	bool Start();
+	void Stop();
+	bool AddTask(Task* task);
+	void ExecuteThread();
+	void ThreadCallBackFunc(void* arg);
 };
 
 
-// 工作线程， 用于处理从主线程接收到的客户端数据
-// 服务器逻辑是单线程
-class WorkerThread
+// 定时检查 全部 task queue 中的数据， 进行处理
+class AcceptThread : public BaseThread
 {
 public:
+	AcceptThread();
+	~AcceptThread();
 
-        WorkerThread();
-        ~WorkerThread();
-
-        bool Start();
-
-		// 添加task 到线程池执行队列
-        bool AddTask(Task *task);
-
-		void SetTaskSizeLimit(int size);
-
-		void SetThreadCallBackTime(uint32_t mTime);
-
-private:
-
-	// 释放整个线程池资源
-	void ReleaseThreadPool();
-
-	// 执行线程 
+public:
+	bool Start();
+	void Stop();
+	bool AddTask(Task* task);
 	void ExecuteThread();
-
-	// the thread's call back function
-	void ThreadCallBackFunc(void* arg);		
+	void ThreadCallBackFunc(void* arg);
 
 private:
-	// 工作线程
-	std::thread mWorkerThread;
 
-	// 线程池共享的互斥锁
-	std::mutex ThreadsSharedMutex;
-
-	// 线程池共享的条件变量
-	std::condition_variable_any ThreadSharedCondVar;
-
-	// 需要线程池处理的任务队列
-	std::queue<Task*> TasksQueue;
-
-	// ture: 表面线程池正在运行  false: 表面 线程停止运行
-	bool bThreadRunning;
-
-	// 线程 能同时处理的最大 task 的数量
-	uint32_t TasksNumsLimitSize;
-
-	// 线程回调的时间 单位秒
-	// 0: 表示只要task 队列中有数据， 就进行回调处理
-	// >0 : 就是定时回调需要的时间间隔
-	uint32_t ThreadCallBackTime;
 };

@@ -24,153 +24,214 @@ void Task::ExecuteTask()
 	mFTaskRunCB(m_arg);
 }
 
-WorkerThread::WorkerThread() 
-{
-    TasksNumsLimitSize = -1;	// means unlimit
-    bThreadRunning = false;
-}
 
-WorkerThread::~WorkerThread()
-{
-    // Release resources
-    if (bThreadRunning != false) 
-	{
-        ReleaseThreadPool();
-    }
-}
-
-void WorkerThread::ThreadCallBackFunc(void* arg)
-{
-	WorkerThread* tp = (WorkerThread*)arg;
-	if (!tp)
-	{
-		LOG_ERROR("thread pool is null");
-	}
-
-	tp->ExecuteThread();
-}
-
-bool WorkerThread::Start()
-{
-    if (bThreadRunning == true) 
-	{
-        LOG_WARN("ThreadPool has started, but call start thread once again");
-        return true;
-    }
-
-    bThreadRunning = true;
-	mWorkerThread = std::thread(&WorkerThread::ThreadCallBackFunc, this, this);
-    return true;
-}
-
-void WorkerThread::SetTaskSizeLimit(int size) 
-{
-    TasksNumsLimitSize = size;
-}
-
-void WorkerThread::SetThreadCallBackTime(uint32_t mTime)
-{
-	ThreadCallBackTime = mTime;
-}
-
-void WorkerThread::ReleaseThreadPool()
+BaseThread::BaseThread()
 {
 	bThreadRunning = false;
+	TasksNumsLimitSize = -1;	// means unlimit
+	ThreadCallBackTime = 0;
+	Stop();
+}
 
-	if (mWorkerThread.joinable())
+BaseThread::~BaseThread()
+{
+	bThreadRunning = false;
+	TasksNumsLimitSize = -1;	// means unlimit
+	ThreadCallBackTime = 0;
+}
+
+bool BaseThread::Start()
+{
+	bThreadRunning = true;
+	return true;
+}
+
+void BaseThread::Stop()
+{
+	bThreadRunning = false;
+}
+
+DealThread::DealThread() :BaseThread()
+{
+
+}
+
+DealThread::~DealThread()
+{
+	Stop();
+}
+
+bool DealThread::Start()
+{
+	if (bThreadRunning == true)
 	{
-		mWorkerThread.join();
+		LOG_WARN("DealThread has started, but call start thread once again");
+		return true;
+	}
+
+	bThreadRunning = true;
+	mThread = std::thread(&DealThread::ThreadCallBackFunc, this, this);
+	return true;
+}
+
+void DealThread::Stop()
+{
+	BaseThread::Stop();
+
+	if (mThread.joinable())
+	{
+		mThread.join();
 	}
 	else
 	{
 		std::stringstream ss;
-		ss << mWorkerThread.get_id();
+		ss << mThread.get_id();
 		uint64_t id = std::stoull(ss.str());
-		LOG_WARN("thread ID: {} can not join ", id);
+		LOG_WARN("DealThread thread ID: {} can not join ", id);
 	}
 }
 
-void WorkerThread::ExecuteThread()
+bool DealThread::AddTask(Task* task)
 {
-	if (ThreadCallBackTime == 0)		// 只要有 task， 就会产生回调
+	ThreadsSharedMutex.lock();
+	if (TasksNumsLimitSize > 0 && TasksQueue.size() > TasksNumsLimitSize)
 	{
-		while (bThreadRunning != false)
+		LOG_WARN("task size reach limit: {}", TasksNumsLimitSize);
+		ThreadsSharedMutex.unlock();
+		return false;
+	}
+
+	TasksQueue.push(task);
+
+	ThreadSharedCondVar.notify_one(); // wake up one thread that is waiting for a task to be available
+	ThreadsSharedMutex.unlock();
+
+	return true;
+}
+
+void DealThread::ExecuteThread()
+{
+	while (bThreadRunning != false)
+	{
+		ThreadsSharedMutex.lock();
+		ThreadSharedCondVar.wait(ThreadsSharedMutex);
+
+		while (!TasksQueue.empty())
+		{
+			Task* task = TasksQueue.front();
+			task->ExecuteTask(); // execute the task
+			delete task;
+			TasksQueue.pop();
+		}
+
+		ThreadsSharedMutex.unlock();
+	}
+}
+
+void DealThread::ThreadCallBackFunc(void* arg)
+{
+	DealThread* bt = (DealThread*)arg;
+	if (!bt)
+	{
+		LOG_ERROR("thread DealThread is null");
+	}
+
+	bt->ExecuteThread();
+}
+
+AcceptThread::AcceptThread():BaseThread()
+{
+
+}
+
+AcceptThread::~AcceptThread()
+{
+
+}
+
+bool AcceptThread::Start()
+{
+	if (bThreadRunning == true)
+	{
+		LOG_WARN("AcceptThread has started, but call start thread once again");
+		return true;
+	}
+
+	bThreadRunning = true;
+	mThread = std::thread(&AcceptThread::ThreadCallBackFunc, this, this);
+	return true;
+}
+
+void AcceptThread::Stop()
+{
+	BaseThread::Stop();
+
+	if (mThread.joinable())
+	{
+		mThread.join();
+	}
+	else
+	{
+		std::stringstream ss;
+		ss << mThread.get_id();
+		uint64_t id = std::stoull(ss.str());
+		LOG_WARN("AcceptThread thread ID: {} can not join ", id);
+	}
+}
+
+bool AcceptThread::AddTask(Task* task)
+{
+	ThreadsSharedMutex.lock();
+	if (TasksNumsLimitSize > 0 && TasksQueue.size() > TasksNumsLimitSize)
+	{
+		LOG_WARN("task size reach limit: {}", TasksNumsLimitSize);
+		ThreadsSharedMutex.unlock();
+		return false;
+	}
+
+	TasksQueue.push(task);
+	ThreadsSharedMutex.unlock();
+
+	return true;
+}
+
+void AcceptThread::ExecuteThread()
+{
+	while (bThreadRunning != false)
+	{
+		auto nowTime = std::chrono::steady_clock::now();
+		while (!TasksQueue.empty())
 		{
 			ThreadsSharedMutex.lock();
-			ThreadSharedCondVar.wait(ThreadsSharedMutex);
-
-			while (!TasksQueue.empty())
+			Task* task = TasksQueue.front();
+			if (!task)
 			{
-				Task* task = TasksQueue.front();
+				LOG_WARN("task is nullptr");
+				continue;
+			}
+			stAcceptTaskData* td = (stAcceptTaskData*)(task->getArgs());
+
+			auto secondsDuring = std::chrono::steady_clock::now() - td->acceptTime;
+			if (double(secondsDuring.count()) * std::chrono::microseconds::period::num / std::chrono::microseconds::period::den > ThreadCallBackTime)
+			{
 				task->ExecuteTask(); // execute the task
 				delete task;
 				TasksQueue.pop();
 			}
-
 			ThreadsSharedMutex.unlock();
 		}
+		std::this_thread::sleep_for(std::chrono::microseconds(10));
 	}
-	else			// 定时回调
-	{
-		while (bThreadRunning != false)
-		{
-			auto nowTime = std::chrono::steady_clock::now();
-			while (!TasksQueue.empty())
-			{
-				ThreadsSharedMutex.lock();
-				Task* task = TasksQueue.front();
-				if (!task)
-				{
-					LOG_WARN("task is nullptr");
-					continue;
-				}
-				stAcceptTaskData* td = (stAcceptTaskData*)(task->getArgs());
-
-				auto secondsDuring = std::chrono::steady_clock::now() - td->acceptTime;
-				if (double(secondsDuring.count()) * std::chrono::microseconds::period::num / std::chrono::microseconds::period::den > ThreadCallBackTime)
-				{
-					task->ExecuteTask(); // execute the task
-					delete task;
-					TasksQueue.pop();
-				}
-				ThreadsSharedMutex.unlock();
-			}
-			std::this_thread::sleep_for(std::chrono::microseconds(10));
-		}
-	}
-
 }
 
-bool WorkerThread::AddTask(Task *task)
+void AcceptThread::ThreadCallBackFunc(void* arg)
 {
-	if (ThreadCallBackTime == 0)
+	AcceptThread* at = (AcceptThread*)arg;
+	if (!at)
 	{
-		ThreadsSharedMutex.lock();
-		if (TasksNumsLimitSize > 0 && TasksQueue.size() > TasksNumsLimitSize)
-		{
-			LOG_WARN("task size reach limit: {}", TasksNumsLimitSize);
-			ThreadsSharedMutex.unlock();
-			return false;
-		}
-
-		TasksQueue.push(task);
-
-		ThreadSharedCondVar.notify_one(); // wake up one thread that is waiting for a task to be available
-		ThreadsSharedMutex.unlock();
-	}
-	else
-	{
-		ThreadsSharedMutex.lock();
-		if (TasksNumsLimitSize > 0 && TasksQueue.size() > TasksNumsLimitSize)
-		{
-			LOG_WARN("task size reach limit: {}", TasksNumsLimitSize);
-			ThreadsSharedMutex.unlock();
-			return false;
-		}
-
-		TasksQueue.push(task);
-		ThreadsSharedMutex.unlock();
+		LOG_ERROR("thread AcceptThread is null");
 	}
 
-    return true;
+	at->ExecuteThread();
 }
+

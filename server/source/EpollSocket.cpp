@@ -133,7 +133,6 @@ int EpollSocket::AcceptConnectSocket(int sockfd, std::string &client_ip)
 void EpollSocket::AcceptThreadCallBack(void* data)
 {
 	// 到这里的，都是经过 连接线程确认， 超时的 客户端
-
 	stAcceptTaskData* td = (stAcceptTaskData*)data;
 	if (td == nullptr)
 	{
@@ -141,7 +140,12 @@ void EpollSocket::AcceptThreadCallBack(void* data)
 		return;
 	}
 
-	CloseAndReleaseOneEvent(td->acceptedEvent);
+	// 此处在accept 线程中， 只能进行读取操作， 不能进行插入操作
+	if (AllConnectedClients.find(td->acceptedEvent.data.fd) == AllConnectedClients.end())	// 在允许时间范围内，没有进行发送数据的操作
+	{
+		CloseAndReleaseOneEvent(td->acceptedEvent);
+	}
+
 }
 
 bool EpollSocket::HandleAcceptEvent(int& epollfd, epoll_event& event, BaseSocketWatcher& socket_handler, epoll_event& accepted_event)
@@ -272,7 +276,7 @@ void EpollSocket::SetSocketWatcher(BaseSocketWatcher* watcher)
 
 bool EpollSocket::InitWorkerThread() 
 {
-    MsgDealThreadPtr = new WorkerThread();
+    MsgDealThreadPtr = new DealThread();
 
 	if (!MsgDealThreadPtr)
 	{
@@ -280,9 +284,8 @@ bool EpollSocket::InitWorkerThread()
 		return false;
 	}
 	MsgDealThreadPtr->SetTaskSizeLimit(AddressInfo.WorkerThreadTaskMax);
-	MsgDealThreadPtr->SetThreadCallBackTime(0);
 
-	AcceptThreadPtr = new WorkerThread();
+	AcceptThreadPtr = new AcceptThread();
 	if (!AcceptThreadPtr)
 	{
 		LOG_ERROR("create Accept thread failed!");
@@ -343,6 +346,8 @@ void EpollSocket::HandleEpollEvent(epoll_event &e)
             delete tdata;
             delete task;
         }
+
+		AllConnectedClients.insert(std::make_pair(e.data.fd, e));
     } 
 	else if (e.events & EPOLLOUT) 
 	{
@@ -481,6 +486,12 @@ void EpollSocket::CloseAndReleaseOneEvent(epoll_event &epoll_event)
 
     delete (stSocketContext *) epoll_event.data.ptr;
     epoll_event.data.ptr = NULL;
+
+	auto wantDeleteClient = AllConnectedClients.find(fd);
+	if (wantDeleteClient != AllConnectedClients.end())
+	{
+		AllConnectedClients.erase(wantDeleteClient);
+	}
 
 #ifndef _WIN32
     int ret = close(fd);
