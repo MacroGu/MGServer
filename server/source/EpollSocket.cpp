@@ -201,7 +201,6 @@ void EpollSocket::DataDealThreadCallBack(void* data)
 void EpollSocket::HandleEpollReadableEvent(epoll_event &event) 
 {
     stSocketContext *socket_context = (stSocketContext *) event.data.ptr;
-    int fd = socket_context->fd;
 
     int ret = Watcher->OnEpollReadableEvent((int&)_epollfd, event);
     if (ret == READ_CLOSE) 
@@ -211,19 +210,6 @@ void EpollSocket::HandleEpollReadableEvent(epoll_event &event)
         CloseAndReleaseOneEvent(event);
 		return;
     }
-//     if (ret == READ_CONTINUE) 
-// 	{
-//         event.events = EPOLLIN | EPOLLONESHOT;
-//         epoll_ctl(_epollfd, EPOLL_CTL_MOD, fd, &event);
-//     } else if (ret == READ_OVER) 
-// 	{ // READ_OVER
-//         event.events = EPOLLOUT | EPOLLONESHOT;
-//         epoll_ctl(_epollfd, EPOLL_CTL_MOD, fd, &event);
-//     } else 
-// 	{
-//         LOG_ERROR("Unknown read ret: {}" ,  ret);
-// 		return;
-//     }
 }
 
 void EpollSocket::HandleWriteableEvent(int &epollfd, epoll_event &event, BaseSocketWatcher &socket_handler) {
@@ -361,7 +347,7 @@ void EpollSocket::HandleEpollEvent(epoll_event &e)
 			int clientfd = e.data.fd;
 			if (AllConnectedClients.find(clientfd) == AllConnectedClients.end())
 			{
-				AllConnectedClients.insert(std::make_pair(e.data.fd, e));
+				AllConnectedClients.insert(std::make_pair(clientfd, e));
 			}
 		}
     } 

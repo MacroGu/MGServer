@@ -199,7 +199,6 @@ void AcceptThread::ExecuteThread()
 {
 	while (bThreadRunning != false)
 	{
-		auto nowTime = std::chrono::steady_clock::now();
 		while (!TasksQueue.empty())
 		{
 			ThreadsSharedMutex.lock();
