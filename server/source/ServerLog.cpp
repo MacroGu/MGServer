@@ -5,6 +5,7 @@
 */
 #include "ServerLog.h"
 #include "spdlog/sinks/rotating_file_sink.h"
+#include "spdlog/sinks/daily_file_sink.h"
 #include "ServerConf.h"
 
 
@@ -35,8 +36,12 @@ void ServerLog::InitLog()
 	auto LoggerInfo = ServerConf::GetInstance().GetInstance().GetLoggerInfo();
 	if (!RotatingLogger)
 	{
-		RotatingLogger = spdlog::rotating_logger_mt(LoggerInfo->LoggerName, LoggerInfo->LogFilePath, 
-			LoggerInfo->MaxSingleFileSize, LoggerInfo->MaxLogFileNums);
+// 		RotatingLogger = spdlog::rotating_logger_mt(LoggerInfo->LoggerName, LoggerInfo->LogFilePath, 
+// 			LoggerInfo->MaxSingleFileSize, LoggerInfo->MaxLogFileNums);
+
+		RotatingLogger = spdlog::daily_logger_mt(LoggerInfo->LoggerName, LoggerInfo->LogFilePath, 2, 30);
 	}
 
+
+	spdlog::flush_every(std::chrono::seconds(3));
 }
