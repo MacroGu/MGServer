@@ -39,15 +39,17 @@ struct stLoggerInfo
 {
 	std::string LoggerName;
 	std::string LogFilePath;
-	uint32_t MaxSingleFileSize;
-	uint8_t MaxLogFileNums;
+	uint8_t hour;
+	uint8_t minutes;
+	uint8_t flushCache;
 
 	stLoggerInfo()
 	{
 		LoggerName = "";
 		LogFilePath = "";
-		MaxSingleFileSize = 0;
-		MaxLogFileNums = 0;
+		hour = 0;
+		minutes = 0;
+		flushCache = 0;
 	}
 
 };

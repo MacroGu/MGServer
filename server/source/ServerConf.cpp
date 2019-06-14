@@ -171,13 +171,17 @@ bool ServerConf::LoadLogInfo(const std::string& FilePath)
 		{
 			LoggerInfo->LogFilePath = value;
 		}
-		else if (strcmp(type, "MaxSingleFileSize") == 0)
+		else if (strcmp(type, "hour") == 0)
 		{
-			LoggerInfo->MaxSingleFileSize = atoi(value);
+			LoggerInfo->hour = atoi(value);
 		}
-		else if (strcmp(type, "MaxLogFileNums") == 0)
+		else if (strcmp(type, "minutes") == 0)
 		{
-			LoggerInfo->MaxLogFileNums = atoi(value);
+			LoggerInfo->minutes = atoi(value);
+		}
+		else if (strcmp(type, "flushCache") == 0)
+		{
+			LoggerInfo->flushCache = atoi(value);
 		}
 		else
 		{

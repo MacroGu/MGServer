@@ -39,9 +39,9 @@ void ServerLog::InitLog()
 // 		RotatingLogger = spdlog::rotating_logger_mt(LoggerInfo->LoggerName, LoggerInfo->LogFilePath, 
 // 			LoggerInfo->MaxSingleFileSize, LoggerInfo->MaxLogFileNums);
 
-		RotatingLogger = spdlog::daily_logger_mt(LoggerInfo->LoggerName, LoggerInfo->LogFilePath, 2, 30);
+		RotatingLogger = spdlog::daily_logger_mt(LoggerInfo->LoggerName, LoggerInfo->LogFilePath, LoggerInfo->hour, LoggerInfo->minutes);
 	}
 
 
-	spdlog::flush_every(std::chrono::seconds(3));
+	spdlog::flush_every(std::chrono::seconds(LoggerInfo->flushCache));
 }
