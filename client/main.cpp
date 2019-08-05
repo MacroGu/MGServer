@@ -1,146 +1,86 @@
-#ifdef _WIN32
+#pragma comment(lib, "ws2_32.lib")
+// 使用多字节集时 define
+#define _WINSOCK_DEPRECATED_NO_WARNINGS
 
-#include <stdio.h>
-#include <string.h>
-#include <stdio.h>  
-#include <winsock2.h>  
-#include <stdint.h>
-#include <iosfwd>
+#include <WinSock2.h>
 #include <iostream>
-#include <string>
 #include <sstream>
-#include <string>
-#include <exception>
-#include <iostream>
-#include <iosfwd>
-#include <sstream>
-#include <fstream>
-#include <thread>
-#include <chrono>
-#include <set>
-#include <list>
-#include <nlohmann/json.hpp>
-#include "protocol.h"
-#include <windows.h>
+#include <map>
+#include "CommonClass.h"
 #include "../server/header/defines.h"
 
-#pragma comment(lib,"ws2_32.lib") 
-#pragma pack(1)
+using namespace std;
 
-// for convenience
-using json = nlohmann::json;
+#define	MAX_BUFFER		4096
+#define SERVER_PORT		8000
+#define SERVER_IP		"127.0.0.1"
+#define MAX_CLIENTS		100
 
-
-#define  BUFFERSIZE 1024
-#define SERVER_IP "106.12.80.224"
-#define SERVER_PORT 2019
-
-
-#define SUM_TOTAL 1000
-#define THREAD_NUM 100
-
-
-char  buffer[BUFFERSIZE];
-
-
-int totalClients;
-std::mutex g_mutex;
-int lostClients;
-
-void ThreadCallBack(int threadID)
+struct stSOCKETINFO
 {
-	SOCKET clientsocket;
-	SOCKADDR_IN serveraddr;
+	WSAOVERLAPPED	overlapped;
+	WSABUF			dataBuf;
+	SOCKET			socket;
+	char			messageBuffer[MAX_BUFFER];
+	int				recvBytes;
+	int				sendBytes;
+};
 
-	serveraddr.sin_family = AF_INET;
-	serveraddr.sin_port = htons(SERVER_PORT);
-	serveraddr.sin_addr.S_un.S_addr = inet_addr(SERVER_IP);
-
-	if ((clientsocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) <= 0)   //create a tcp socket  
-	{
-		printf("Create socket fail!\n");
-		return ;
+int main()
+{
+	WSADATA wsaData;
+	// 将Winsock版本初始化为2.2
+	int nRet = WSAStartup(MAKEWORD(2, 2), &wsaData);
+	if (nRet != 0) {
+		LOG_ERROR(" WSAStartup Error : {}", WSAGetLastError());
+		return false;
 	}
 
-	//connect to server  
-	while (connect(clientsocket, (SOCKADDR*)& serveraddr, sizeof(serveraddr)) != 0)
-	{
-		std::this_thread::sleep_for(std::chrono::seconds(5));
-	} 
-	g_mutex.lock();
-	totalClients++;
-	g_mutex.unlock();
-
-	std::string sendData = "test client data 1";
-	for (;;)
-	{
-		auto beforeTime = std::chrono::system_clock::now();
-		if (send(clientsocket, sendData.c_str(), sendData.length(), 0) <= 0)
-		{
-			closesocket(clientsocket);
-			--totalClients;
-			g_mutex.lock();
-			lostClients++;
-			g_mutex.unlock();
-			std::cout << "send data Error!, not last one package   : " << lostClients << std::endl;
-			return;
-		}
-
-		char recvData[1024] = { 0 };
-		if (recv(clientsocket, (char*)recvData, sendData.length(), 0) < 0)
-		{
-			closesocket(clientsocket);
-			std::cout << "recv error !" << std::endl;
-			--totalClients;
-			g_mutex.lock();
-			lostClients++;
-			g_mutex.unlock();
-			std::cout << "recv error !  : " << lostClients << std::endl;
-			return;
-		}
-		auto millis = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - beforeTime).count();
-
-		std::string receivedData = std::string(recvData);
-		if (receivedData != sendData)
-		{
-			std::cout << "data send failed!" << std::endl;
-		}
-
-		std::this_thread::sleep_for(std::chrono::microseconds(1));
-	}
-}
-
-int  main(int argc, char ** argv) {
-
-	WORD version = MAKEWORD(2, 2);
-	WSADATA data;
-
-	if (WSAStartup(version, &data) != 0) {
-		std::cerr << "WSAStartup() failure" << std::endl;
-		return -1;
+	// TCP socket 创建
+	SOCKET clientSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	if (clientSocket == INVALID_SOCKET) {
+		LOG_ERROR(" TCP socket 创建 : {}", WSAGetLastError());
+		return false;
 	}
 
-	totalClients = 0;
-	lostClients = 0;
-	std::thread AllThread[THREAD_NUM];
-	while (true)
-	{
-		while (totalClients < THREAD_NUM)
-		{
-			AllThread[totalClients] = std::thread(&ThreadCallBack, totalClients);
-			std::this_thread::sleep_for(std::chrono::seconds(10));
-		}
+	LOG_INFO("socket initialize success.");
 
-		while (true)
-		{
+	// 存储要连接的服务器信息的结构
+	SOCKADDR_IN stServerAddr;
 
-			std::cout << "lost clients : " << lostClients << "   currrent total: " << totalClients << std::endl;
-			std::this_thread::sleep_for(std::chrono::seconds(10));
-		}
+	char	szOutMsg[MAX_BUFFER];
+	char	sz_socketbuf_[MAX_BUFFER];
+	stServerAddr.sin_family = AF_INET;
+	// 要连接的服务器端口和IP
+	stServerAddr.sin_port = htons(SERVER_PORT);
+	stServerAddr.sin_addr.s_addr = inet_addr(SERVER_IP);
+
+	nRet = connect(clientSocket, (sockaddr*)& stServerAddr, sizeof(sockaddr));
+	if (nRet == SOCKET_ERROR) {
+		LOG_ERROR(" TCP connect  : {}", WSAGetLastError());
+		return false;
 	}
 
+	LOG_INFO("Connection success...");
+
+	stringstream SendStream;
+	SendStream << EPacketType::SIGNUP << endl;
+	SendStream << "tes2t" << endl;
+	SendStream << "test" << endl;
+
+	int nSend = send(clientSocket, (CHAR*)SendStream.str().c_str(), SendStream.str().length(), 0);
+
+	int nRecv = recv(clientSocket, sz_socketbuf_, MAX_BUFFER, 0);
+
+	stringstream RecvStream;
+	bool result;
+	RecvStream << sz_socketbuf_;
+	RecvStream >> result;
+	LOG_INFO("recv: {}", result);
+
+	closesocket(clientSocket);
 	WSACleanup();
+	LOG_INFO("Client has been terminated...");
+
 	return 0;
 }
-
-#endif // !_WIN32
