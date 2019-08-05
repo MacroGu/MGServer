@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-
+#include "defines.h"
 #include <uv.h>
 
 uv_loop_t* loop;
@@ -29,7 +29,7 @@ void alloc_buff(uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf)
 void write_cb(uv_write_t* req, int status)
 {
 	if (status)
-		fprintf(stderr, "Write error %s\n", uv_strerror(status));
+		LOG_ERROR("Write error {} ", uv_strerror(status));
 	free_write_req(req);
 }
 
@@ -46,7 +46,7 @@ void read_cb(uv_stream_t* client, ssize_t nread, const uv_buf_t* buf)
 	if (nread < 0)
 	{
 		if (nread != UV_EOF)
-			fprintf(stderr, "Read error %s\n", uv_err_name(nread));
+			LOG_ERROR("Write error {} ", uv_err_name(nread));
 		uv_close((uv_handle_t*)client, NULL);
 	}
 	free(buf->base);
@@ -56,7 +56,7 @@ void on_new_connection(uv_stream_t* server, int status)
 {
 	if (status < 0)
 	{
-		fprintf(stderr, "New connection error %s\n", uv_strerror(status));
+		LOG_ERROR("New connection error {} ", uv_strerror(status));
 		return;
 	}
 
@@ -79,7 +79,7 @@ void idle_cb(uv_idle_t* handle)
 
 void timer_cb(uv_timer_t* handle)
 {
-	printf("FPS...%d\n", counter);
+	LOG_INFO("FPS... {} ", counter);
 	counter = 0;
 }
 
@@ -105,7 +105,7 @@ int main()
 	int r = uv_listen((uv_stream_t*)& server, 10, on_new_connection);
 	if (r)
 	{
-		fprintf(stderr, "Listen error %s\n", uv_strerror(r));
+		LOG_ERROR("Listen error {}", uv_strerror(r));
 		return 1;
 	}
 	return uv_run(loop, UV_RUN_DEFAULT);
