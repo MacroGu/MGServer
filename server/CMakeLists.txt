@@ -19,6 +19,7 @@ set(HEADER_FILES
 	${HEADER_FILES_PREFIX}/base64.h
 	${HEADER_FILES_PREFIX}/sha1.h
 	${HEADER_FILES_PREFIX}/DBConnector.h
+	${HEADER_FILES_PREFIX}/Monster.h
 	${HEADER_FILES_PREFIX}/GameServer.h
 )
 
@@ -33,6 +34,7 @@ set(SOURCE_FILES
 	${SOURCE_FILES_PREFIX}/base64.cpp
 	${SOURCE_FILES_PREFIX}/sha1.cpp
 	${SOURCE_FILES_PREFIX}/DBConnector.cpp
+	${SOURCE_FILES_PREFIX}/Monster.cpp
 	${SOURCE_FILES_PREFIX}/GameServer.cpp
 	main.cpp
 )
