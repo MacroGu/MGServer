@@ -11,6 +11,8 @@
 #include "protocol.h"
 #include "ServerConf.h"
 #include "RedisHandle.h"
+#include "MysqlHandle.h"
+
 
 GameSocketWatcher::GameSocketWatcher()
 {
@@ -118,6 +120,12 @@ bool CGameServer::StartServer()
 // 	if (!RedisHandle::GetInstance().Init())
 // 	{
 // 		LOG_ERROR("init redis failed!");
+// 		return false;
+// 	}
+
+// 	if (!MysqlHandle::GetInstance().Init())
+// 	{
+// 		LOG_ERROR("init Mysql failed!");
 // 		return false;
 // 	}
 
