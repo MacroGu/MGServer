@@ -74,7 +74,7 @@ bool ServerConf::LoadServerInfo(const std::string& fileDir, const std::string& a
 	TiXmlDocument doc;
 	if (!doc.LoadFile(fileDir.c_str()))
 	{
-		std::cout << __FUNCTION__ << " : " << __LINE__ << "  load log info configuration failed! " << fileDir.c_str()<< " error:" << doc.ErrorDesc() << std::endl;
+		std::cout << __FUNCTION__ << " : " << __LINE__ << "  load log info configuration failed! " << fileDir.c_str() << " error:" << doc.ErrorDesc() << std::endl;
 		return false;
 	}
 
@@ -118,9 +118,13 @@ bool ServerConf::LoadServerInfo(const std::string& fileDir, const std::string& a
 		{
 			AddressInfo.WorkerThreadTaskMax = atoi(value);
 		}
+		else if (strcmp(type, "timeCheckAcceptClient") == 0)
+		{
+			AddressInfo.timeCheckAcceptClient = atoi(value);
+		}
 		else
 		{
-			std::cout << __FUNCTION__ << " : " << __LINE__ << "  server info conf type: " << type<< " value: " << value << std::endl;
+			std::cout << __FUNCTION__ << " : " << __LINE__ << "  server info conf type: " << type << " value: " << value << std::endl;
 			doc.Clear();
 			return false;
 		}
@@ -167,13 +171,17 @@ bool ServerConf::LoadLogInfo(const std::string& FilePath)
 		{
 			LoggerInfo->LogFilePath = value;
 		}
-		else if (strcmp(type, "MaxSingleFileSize") == 0)
+		else if (strcmp(type, "hour") == 0)
 		{
-			LoggerInfo->MaxSingleFileSize = atoi(value);
+			LoggerInfo->hour = atoi(value);
 		}
-		else if (strcmp(type, "MaxLogFileNums") == 0)
+		else if (strcmp(type, "minutes") == 0)
 		{
-			LoggerInfo->MaxLogFileNums = atoi(value);
+			LoggerInfo->minutes = atoi(value);
+		}
+		else if (strcmp(type, "flushCache") == 0)
+		{
+			LoggerInfo->flushCache = atoi(value);
 		}
 		else
 		{

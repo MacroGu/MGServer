@@ -14,13 +14,16 @@
 		<value type="maxevents" value="1000" />
 		<value type="backlog" value="1000" />
 		<value type="WorkerThreadTaskMax" value="-1" />
+		<value type="timeCheckAcceptClient" value="5000" />			<!-- 用于检查建立连接的客户端的最长时间  毫秒 -->
 	</addressInfo>	
 	
+	<!-- 日志修改为每日定时更新 -->
 	<loggerinfo>		
 		<value type="LoggerName" value="gameserver" />
 		<value type="LogFilePath" value="logs/gameserver.log" />
-		<value type="MaxSingleFileSize" value="1048576" />		<!-- 单文件最大为 1024*1024 = 1M -->
-		<value type="MaxLogFileNums" value="10" />		<!-- 单服务器最大日志文件数量为 10个 -->
+		<value type="hour" value="2" />		<!-- 2小时 -->
+		<value type="minutes" value="30" />		<!-- 30 分 -->
+		<value type="flushCache" value="1" />	<!-- 间隔秒，输出日志缓存到日志文件 -->
 	</loggerinfo>
 	
 	<redisInfo>		

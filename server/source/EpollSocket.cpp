@@ -149,7 +149,11 @@ void EpollSocket::HandleAcceptEvent(int &epollfd, epoll_event &event, BaseSocket
     socket_handler.OnEpollAcceptEvent(*socket_context);
 
     struct epoll_event conn_sock_ev;
-    conn_sock_ev.events = EPOLLIN | EPOLLONESHOT;
+#ifdef _WIN32
+	conn_sock_ev.events = EPOLLIN | EPOLLONESHOT;
+#else
+	conn_sock_ev.events = EPOLLIN | EPOLLET | EPOLLONESHOT;
+#endif
     conn_sock_ev.data.ptr = socket_context;
 
     if (epoll_ctl(_epollfd, EPOLL_CTL_ADD, conn_sock, &conn_sock_ev) == -1) 
@@ -263,7 +267,11 @@ bool EpollSocket::InitThreadPool()
 bool EpollSocket::AddListenSocketToEpoll() 
 {
 	struct epoll_event ev;
+#ifdef _WIN32
 	ev.events = EPOLLIN;
+#else
+	ev.events = EPOLLIN | EPOLLET; // ET
+#endif
 	ev.data.fd = ListenedSocket;
 	if (epoll_ctl(_epollfd, EPOLL_CTL_ADD, ListenedSocket, &ev) == -1)
 	{

@@ -21,6 +21,7 @@ struct stAddressInfo
 	uint32_t maxEvents;
 	uint32_t backlog;
 	uint32_t WorkerThreadTaskMax;
+	uint32_t timeCheckAcceptClient;
 
 	stAddressInfo()
 	{
@@ -29,6 +30,7 @@ struct stAddressInfo
 		maxEvents = 0;
 		backlog = 0;
 		WorkerThreadTaskMax = 0;
+		timeCheckAcceptClient = 0;
 	}
 };
 
@@ -37,15 +39,17 @@ struct stLoggerInfo
 {
 	std::string LoggerName;
 	std::string LogFilePath;
-	uint32_t MaxSingleFileSize;
-	uint8_t MaxLogFileNums;
+	uint8_t hour;
+	uint8_t minutes;
+	uint8_t flushCache;
 
 	stLoggerInfo()
 	{
 		LoggerName = "";
 		LogFilePath = "";
-		MaxSingleFileSize = 0;
-		MaxLogFileNums = 0;
+		hour = 0;
+		minutes = 0;
+		flushCache = 0;
 	}
 
 };
