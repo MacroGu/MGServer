@@ -4,7 +4,7 @@ set(CMAKE_VERBOSE_MAKEFILE OFF)
 # Add the source in project root directory
 aux_source_directory(. DIRSRCS)
 # Add header file include directories
-include_directories(./ ./include ./tinyxml ./server ./client ./MsgPacket)
+include_directories(./ ./include ./tinyxml ./server ./client ./MsgPacket ./include/mysql)
 if(MSVC)
 	include_directories(hiredis/win)
 else()
@@ -15,6 +15,7 @@ add_subdirectory(tinyxml)
 add_subdirectory(libuv)
 add_subdirectory(MsgPacket)
 add_subdirectory(server)
+
 
 
 if(MSVC)
