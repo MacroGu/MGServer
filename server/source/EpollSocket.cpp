@@ -251,7 +251,7 @@ void EpollSocket::SetSocketWatcher(BaseSocketWatcher* watcher)
 	this->Watcher = watcher;
 }
 
-bool EpollSocket::InitThreadPool() 
+bool EpollSocket::InitWorkerThread() 
 {
     WorkerThreadPtr = new WorkerThread();
 
@@ -335,11 +335,11 @@ bool EpollSocket::CreateEpoll()
     return true;
 }
 
-bool EpollSocket::StartThreadPool() 
+bool EpollSocket::StartWorkerThread() 
 {
     if (WorkerThreadPtr == NULL) 
 	{
-		if (!InitThreadPool())
+		if (!InitWorkerThread())
 		{
 			LOG_ERROR("initial thread pool failed!");
 			return false;
@@ -386,7 +386,7 @@ bool EpollSocket::StartEpoll()
 
 	do
 	{
-		ret = StartThreadPool();
+		ret = StartWorkerThread();
 		if (!ret) break;
 
 		ret = BindOnAddress(AddressInfo);

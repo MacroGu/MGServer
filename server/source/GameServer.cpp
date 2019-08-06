@@ -104,12 +104,11 @@ CGameServer::~CGameServer()
 	SocketPool.StopEpoll();
 }
 
-bool CGameServer::StartServer()
+bool CGameServer::InitServer()
 {
 	if (!ServerConf::GetInstance().LoadServerConf())
 	{
 		LOG_ERROR("load server info configure file read failed!");
-		return false;
 	}
 	else
 	{
@@ -117,22 +116,27 @@ bool CGameServer::StartServer()
 	}
 
 
-// 	if (!RedisHandle::GetInstance().Init())
-// 	{
-// 		LOG_ERROR("init redis failed!");
-// 		return false;
-// 	}
+	// 	if (!RedisHandle::GetInstance().Init())
+	// 	{
+	// 		LOG_ERROR("init redis failed!");
+	// 		return false;
+	// 	}
 
-// 	if (!MysqlHandle::GetInstance().Init())
-// 	{
-// 		LOG_ERROR("init Mysql failed!");
-// 		return false;
-// 	}
+	// 	if (!MysqlHandle::GetInstance().Init())
+	// 	{
+	// 		LOG_ERROR("init Mysql failed!");
+	// 		return false;
+	// 	}
+
+	return true;
+}
+
+void CGameServer::StartServer()
+{
 
 	SocketPool.SetAddressInfo(ADDRESS_INFO_CONFIGURE);
 	SocketPool.SetSocketWatcher(new GameSocketWatcher());
 
-	if (!SocketPool.StartEpoll()) return false;
+	if (!SocketPool.StartEpoll()) return;
 
-	return true;
 }

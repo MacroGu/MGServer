@@ -87,9 +87,9 @@ private:
 
         void CloseAndReleaseOneEvent(epoll_event &event);
 
-        bool InitThreadPool();
+        bool InitWorkerThread();
 
-        bool StartThreadPool();
+        bool StartWorkerThread();
 
         bool CreateEpoll();
 

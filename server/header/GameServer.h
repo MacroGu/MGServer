@@ -11,8 +11,9 @@
 #include <map>
 #include <set>
 #include <stdint.h>
-#include "WebSocketStyle.h"
+#include <iostream>
 #include "EpollSocket.h"
+#include "CommonClass.h"
 
 // socket 处理类
 class GameSocketWatcher : public BaseSocketWatcher
@@ -34,12 +35,17 @@ private:
 	// handle client message
 	bool HandleClientNormalSocketData(stSocketContext *socket_context, char clientData[], int dataLength);
 
-
-	// 如果需要解析websocket 协议， 用此实现
-	CWebSocketStyle webSocketStyle;
-
 };
 
+// 包处理函数指针
+struct FuncProcess
+{
+	void(*funcProcessPacket)(std::stringstream& RecvStream, stSocketContext* pSocket);
+	FuncProcess()
+	{
+		funcProcessPacket = nullptr;
+	}
+};
 
 class CGameServer
 {
@@ -47,7 +53,10 @@ public:
 	CGameServer();
 	~CGameServer();
 
-	bool StartServer();
+	// 初始化服务器
+	bool InitServer();
+	// 启动服务器
+	void StartServer();
 
 private:
 
