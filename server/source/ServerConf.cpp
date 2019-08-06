@@ -40,6 +40,12 @@ bool ServerConf::LoadServerConf()
 		return false;
 	}
 
+	if (!LoadMySqlInfo(SERVER_CONF_PATH))
+	{
+		std::cout << __FUNCTION__ << " : " << __LINE__ << "  load Mysql info configuration failed! " << std::endl;
+		return false;
+	}
+
 	if (!LoadUniqueInfo(SERVER_CONF_PATH))
 	{
 		std::cout << __FUNCTION__ << " : " << __LINE__ << "  load server unique info configuration failed! " << std::endl;
@@ -67,6 +73,11 @@ std::shared_ptr<stLoggerInfo> ServerConf::GetLoggerInfo()
 std::shared_ptr<stRedisInfo> ServerConf::GetRedisInfo()
 {
 	return RedisInfo;
+}
+
+std::shared_ptr<stMySQLInfo> ServerConf::GetMySqlInfo()
+{
+	return MySqlInfo;
 }
 
 bool ServerConf::LoadServerInfo(const std::string& fileDir, const std::string& addressInfo)
@@ -214,7 +225,7 @@ bool ServerConf::LoadRedisInfo(const std::string& FilePath)
 	TiXmlElement* LogInfo = server->FirstChildElement("redisInfo");
 	if (LogInfo == nullptr)
 	{
-		std::cout << __FUNCTION__ << " : " << __LINE__ << "  can not find loggerinfo info xml attribute " << std::endl;
+		std::cout << __FUNCTION__ << " : " << __LINE__ << "  can not find redisInfo info xml attribute " << std::endl;
 		return false;
 	}
 
@@ -235,6 +246,67 @@ bool ServerConf::LoadRedisInfo(const std::string& FilePath)
 		else
 		{
 			std::cout << __FUNCTION__ << " : " << __LINE__ << "  redis info conf type: " << type << " value: " << value << std::endl;
+			doc.Clear();
+			return false;
+		}
+	}
+
+	doc.Clear();
+	return true;
+}
+
+bool ServerConf::LoadMySqlInfo(const std::string& FilePath)
+{
+	TiXmlDocument doc;
+	if (!doc.LoadFile(FilePath.c_str()))
+	{
+		std::cout << __FUNCTION__ << " : " << __LINE__ << "  load file: " << FilePath << " error: " << doc.ErrorDesc() << std::endl;
+		return false;
+	}
+
+	TiXmlElement* server = doc.FirstChildElement();
+	if (server == nullptr)
+	{
+		std::cout << __FUNCTION__ << " : " << __LINE__ << "  can not find root in xml!" << std::endl;
+		return false;
+	}
+
+	TiXmlElement* LogInfo = server->FirstChildElement("mysqlInfo");
+	if (LogInfo == nullptr)
+	{
+		std::cout << __FUNCTION__ << " : " << __LINE__ << "  can not find mysqlInfo info xml attribute " << std::endl;
+		return false;
+	}
+
+	for (TiXmlElement* m_serverInfoValue = LogInfo->FirstChildElement("value");
+		m_serverInfoValue != nullptr; m_serverInfoValue = m_serverInfoValue->NextSiblingElement())
+	{
+		const char* type = m_serverInfoValue->Attribute("type");
+		const char* value = m_serverInfoValue->Attribute("value");
+
+		if (strcmp(type, "mysqlAddress") == 0)
+		{
+			MySqlInfo->MySqlAddress = value;
+		}
+		else if (strcmp(type, "mysqlPort") == 0)
+		{
+			MySqlInfo->MySqlPort = atoi(value);
+		}
+		else if (strcmp(type, "username") == 0)
+		{
+			MySqlInfo->userName = value;
+		}
+		else if (strcmp(type, "password") == 0)
+		{
+			MySqlInfo->password = value;
+		}
+		else if (strcmp(type, "database") == 0)
+		{
+			MySqlInfo->database = value;
+		}
+		else
+		{
+			std::cout << __FUNCTION__ << " : " << __LINE__ << "  Mysql info conf type: " << type << " value: " << value << std::endl;
 			doc.Clear();
 			return false;
 		}

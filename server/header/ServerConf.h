@@ -68,6 +68,26 @@ struct stRedisInfo
 
 };
 
+// MySQL info
+struct stMySQLInfo
+{
+	std::string MySqlAddress;
+	uint32_t MySqlPort;
+	std::string userName;
+	std::string password;
+	std::string database;
+
+	stMySQLInfo()
+	{
+		MySqlAddress = "";
+		MySqlPort = 0;
+		userName = "";
+		password = "";
+		database = "";
+	}
+
+};
+
 // current server unique info
 struct stUniqueInfo
 {
@@ -94,6 +114,8 @@ public:
 	std::shared_ptr<stLoggerInfo> GetLoggerInfo();
 	// get redis configuration
 	std::shared_ptr<stRedisInfo> GetRedisInfo();
+	// get Mysql configuration
+	std::shared_ptr<stMySQLInfo> GetMySqlInfo();
 
 protected:
 	// load local server configure
@@ -102,6 +124,8 @@ protected:
 	bool LoadLogInfo(const std::string& FilePath);
 	// load redis configure
 	bool LoadRedisInfo(const std::string& FilePath);
+	// load redis configure
+	bool LoadMySqlInfo(const std::string& FilePath);
 	// load server unique info configure
 	bool LoadUniqueInfo(const std::string& FilePath);
 
@@ -113,6 +137,8 @@ private:
 	std::shared_ptr<stLoggerInfo> LoggerInfo;
 	// redis configuration
 	std::shared_ptr<stRedisInfo> RedisInfo;
+	// Mysql configuration
+	std::shared_ptr<stMySQLInfo> MySqlInfo;
 	// current server unique info configuration
 	std::shared_ptr<stUniqueInfo> UniqueInfo;
 

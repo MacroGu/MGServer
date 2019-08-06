@@ -115,11 +115,11 @@ bool CGameServer::StartServer()
 	}
 
 
-	if (!RedisHandle::GetInstance().Init())
-	{
-		LOG_ERROR("init redis failed!");
-		return false;
-	}
+// 	if (!RedisHandle::GetInstance().Init())
+// 	{
+// 		LOG_ERROR("init redis failed!");
+// 		return false;
+// 	}
 
 	SocketPool.SetAddressInfo(ADDRESS_INFO_CONFIGURE);
 	SocketPool.SetSocketWatcher(new GameSocketWatcher());

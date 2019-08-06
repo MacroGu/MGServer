@@ -30,5 +30,13 @@
 		<value type="redisAddress" value="127.0.0.1" />
 		<value type="redisPort" value="6379" />
 	</redisInfo>	
+
+	<mysqlInfo>		
+		<value type="mysqlAddress" value="127.0.0.1" />
+		<value type="mysqlPort" value="3306" />
+		<value type="username" value="root" />
+		<value type="password" value="guhong888" />
+		<value type="database" value="sungminworld" />
+	</mysqlInfo>
 	
 </server>
