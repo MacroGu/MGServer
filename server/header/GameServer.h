@@ -37,16 +37,6 @@ private:
 
 };
 
-// 包处理函数指针
-struct FuncProcess
-{
-	void(*funcProcessPacket)(std::stringstream& RecvStream, stSocketContext* pSocket);
-	FuncProcess()
-	{
-		funcProcessPacket = nullptr;
-	}
-};
-
 class CGameServer
 {
 public:

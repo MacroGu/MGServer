@@ -20,6 +20,8 @@ set(HEADER_FILES
 	${HEADER_FILES_PREFIX}/sha1.h
 	${HEADER_FILES_PREFIX}/MysqlHandle.h
 	${HEADER_FILES_PREFIX}/Monster.h
+	${HEADER_FILES_PREFIX}/IocpBase.h
+	${HEADER_FILES_PREFIX}/MainIocp.h
 	${HEADER_FILES_PREFIX}/GameServer.h
 )
 
@@ -35,6 +37,8 @@ set(SOURCE_FILES
 	${SOURCE_FILES_PREFIX}/sha1.cpp
 	${SOURCE_FILES_PREFIX}/MysqlHandle.cpp
 	${SOURCE_FILES_PREFIX}/Monster.cpp
+	${SOURCE_FILES_PREFIX}/IocpBase.cpp
+	${SOURCE_FILES_PREFIX}/MainIocp.cpp
 	${SOURCE_FILES_PREFIX}/GameServer.cpp
 	main.cpp
 )
@@ -48,12 +52,11 @@ add_executable(server
     ${SOURCE_FILES}
 )
 if(MSVC)
-	target_link_libraries(server wepoll libmysql)
+	target_link_libraries(server tinyxml hiredis wepoll libmysql ws2_32)
 	ADD_DEFINITIONS(-D_CRT_SECURE_NO_WARNINGS -D_CRT_SECURE_NO_WARNINGS -D_WINSOCK_DEPRECATED_NO_WARNINGS -D_SPDLOG_ACTIVE_LEVEL)
 else()
-	target_link_libraries(server mysqlclient)
+	target_link_libraries(server tinyxml hiredis mysqlclient)
 endif()
-target_link_libraries(server tinyxml hiredis)
 
 if(CMAKE_COMPILER_IS_GNUCXX)
 	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -pthread -std=c++11")
