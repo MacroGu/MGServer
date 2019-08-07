@@ -3,7 +3,7 @@ project(server)
 
 # Add header file include directories
 include_directories(./ ./header ../ ../websocketpp ../wepoll/include)
-link_directories(../libs/mysql_win)
+link_directories(../libs/mysql)
 
 set(HEADER_FILES_PREFIX header)
 set(HEADER_FILES
@@ -48,12 +48,12 @@ add_executable(server
     ${SOURCE_FILES}
 )
 if(MSVC)
-	target_link_libraries(server wepoll)
+	target_link_libraries(server wepoll libmysql)
 	ADD_DEFINITIONS(-D_CRT_SECURE_NO_WARNINGS -D_CRT_SECURE_NO_WARNINGS -D_WINSOCK_DEPRECATED_NO_WARNINGS -D_SPDLOG_ACTIVE_LEVEL)
 else()
-
+	target_link_libraries(server mysqlclient)
 endif()
-target_link_libraries(server tinyxml hiredis mysqlclient)
+target_link_libraries(server tinyxml hiredis)
 
 if(CMAKE_COMPILER_IS_GNUCXX)
 	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -pthread -std=c++11")
