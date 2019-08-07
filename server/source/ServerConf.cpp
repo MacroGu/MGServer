@@ -12,6 +12,7 @@ ServerConf::ServerConf()
 	bAllConfLoadedRight = true;
 	LoggerInfo = std::make_shared<stLoggerInfo>();
 	RedisInfo = std::make_shared<stRedisInfo>();
+	MySqlInfo = std::make_shared<stMySQLInfo>();
 	UniqueInfo = std::make_shared<stUniqueInfo>();
 }
 

@@ -133,6 +133,7 @@ bool CGameServer::InitServer()
 
 void CGameServer::StartServer()
 {
+	if (!InitServer()) return;
 
 	SocketPool.SetAddressInfo(ADDRESS_INFO_CONFIGURE);
 	SocketPool.SetSocketWatcher(new GameSocketWatcher());
