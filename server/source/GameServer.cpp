@@ -122,17 +122,18 @@ bool CGameServer::InitServer()
 	// 		return false;
 	// 	}
 
-	// 	if (!MysqlHandle::GetInstance().Init())
-	// 	{
-	// 		LOG_ERROR("init Mysql failed!");
-	// 		return false;
-	// 	}
+	if (!MysqlHandle::GetInstance().Init())
+	{
+		LOG_ERROR("init Mysql failed!");
+		return false;
+ 	}
 
 	return true;
 }
 
 void CGameServer::StartServer()
 {
+	if (!InitServer()) return;
 
 	SocketPool.SetAddressInfo(ADDRESS_INFO_CONFIGURE);
 	SocketPool.SetSocketWatcher(new GameSocketWatcher());
