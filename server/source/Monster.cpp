@@ -40,7 +40,7 @@ void Monster::HitPlayer(cCharacter& target)
 		bIsAttacking = true;
 		LOG_INFO("¹¥»÷");
 		target.HealthValue -= HitPoint;
-		std::this_thread::sleep_for(1s);
+		std::this_thread::sleep_for(std::chrono::seconds(1));
 		bIsAttacking = false;
 		});
 	t.detach();

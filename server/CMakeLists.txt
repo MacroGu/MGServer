@@ -53,7 +53,7 @@ if(MSVC)
 else()
 
 endif()
-target_link_libraries(server tinyxml hiredis libmysql)
+target_link_libraries(server tinyxml hiredis mysqlclient)
 
 if(CMAKE_COMPILER_IS_GNUCXX)
 	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -pthread -std=c++11")

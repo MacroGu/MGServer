@@ -122,11 +122,11 @@ bool CGameServer::InitServer()
 	// 		return false;
 	// 	}
 
-	// 	if (!MysqlHandle::GetInstance().Init())
-	// 	{
-	// 		LOG_ERROR("init Mysql failed!");
-	// 		return false;
-	// 	}
+	if (!MysqlHandle::GetInstance().Init())
+	{
+		LOG_ERROR("init Mysql failed!");
+		return false;
+	}
 
 	return true;
 }
