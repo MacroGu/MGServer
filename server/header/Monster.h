@@ -26,19 +26,19 @@ public:
 	// …Ë÷√Œª÷√
 	void SetLocation(float x, float y, float z);
 
-	friend ostream& operator<<(ostream& stream, Monster& info)
+	friend std::ostream& operator<<(std::ostream& stream, Monster& info)
 	{
-		stream << info.X << endl;
-		stream << info.Y << endl;
-		stream << info.Z << endl;
-		stream << info.Health << endl;
-		stream << info.Id << endl;
-		stream << info.bIsAttacking << endl;
+		stream << info.X << std::endl;
+		stream << info.Y << std::endl;
+		stream << info.Z << std::endl;
+		stream << info.Health << std::endl;
+		stream << info.Id << std::endl;
+		stream << info.bIsAttacking << std::endl;
 
 		return stream;
 	}
 
-	friend istream& operator>>(istream& stream, Monster& info)
+	friend std::istream& operator>>(std::istream& stream, Monster& info)
 	{
 		stream >> info.X;
 		stream >> info.Y;
@@ -68,21 +68,21 @@ private:
 class MonsterSet
 {
 public:
-	map<int, Monster> monsters;
+	std::map<int, Monster> monsters;
 
-	friend ostream& operator<<(ostream& stream, MonsterSet& info)
+	friend std::ostream& operator<<(std::ostream& stream, MonsterSet& info)
 	{
-		stream << info.monsters.size() << endl;
+		stream << info.monsters.size() << std::endl;
 		for (auto& kvp : info.monsters)
 		{
-			stream << kvp.first << endl;
-			stream << kvp.second << endl;
+			stream << kvp.first << std::endl;
+			stream << kvp.second << std::endl;
 		}
 
 		return stream;
 	}
 
-	friend istream& operator>>(istream& stream, MonsterSet& info)
+	friend std::istream& operator>>(std::istream& stream, MonsterSet& info)
 	{
 		int nMonsters = 0;
 		int PrimaryId = 0;

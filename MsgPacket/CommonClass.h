@@ -3,8 +3,6 @@
 #include <iostream>
 #include <map>
 
-using namespace std;
-
 #define MAX_CLIENTS 100
 
 enum EPacketType
@@ -49,26 +47,26 @@ public:
 	float	HealthValue;
 	bool	IsAttacking;
 
-	friend ostream& operator<<(ostream& stream, cCharacter& info)
+	friend std::ostream& operator<<(std::ostream& stream, cCharacter& info)
 	{
-		stream << info.SessionId << endl;
-		stream << info.X << endl;
-		stream << info.Y << endl;
-		stream << info.Z << endl;
-		stream << info.VX << endl;
-		stream << info.VY << endl;
-		stream << info.VZ << endl;
-		stream << info.Yaw << endl;
-		stream << info.Pitch << endl;
-		stream << info.Roll << endl;
-		stream << info.IsAlive << endl;
-		stream << info.HealthValue << endl;
-		stream << info.IsAttacking << endl;
+		stream << info.SessionId << std::endl;
+		stream << info.X << std::endl;
+		stream << info.Y << std::endl;
+		stream << info.Z << std::endl;
+		stream << info.VX << std::endl;
+		stream << info.VY << std::endl;
+		stream << info.VZ << std::endl;
+		stream << info.Yaw << std::endl;
+		stream << info.Pitch << std::endl;
+		stream << info.Roll << std::endl;
+		stream << info.IsAlive << std::endl;
+		stream << info.HealthValue << std::endl;
+		stream << info.IsAttacking << std::endl;
 
 		return stream;
 	}
 
-	friend istream& operator>>(istream& stream, cCharacter& info)
+	friend std::istream& operator>>(std::istream& stream, cCharacter& info)
 	{
 		stream >> info.SessionId;
 		stream >> info.X;
@@ -94,21 +92,21 @@ public:
 	cCharactersInfo();
 	~cCharactersInfo();
 
-	map<int, cCharacter> players;
+	std::map<int, cCharacter> players;
 
-	friend ostream& operator<<(ostream& stream, cCharactersInfo& info)
+	friend std::ostream& operator<<(std::ostream& stream, cCharactersInfo& info)
 	{
-		stream << info.players.size() << endl;
+		stream << info.players.size() << std::endl;
 		for (auto& kvp : info.players)
 		{
-			stream << kvp.first << endl;
-			stream << kvp.second << endl;
+			stream << kvp.first << std::endl;
+			stream << kvp.second << std::endl;
 		}
 
 		return stream;
 	}
 
-	friend istream& operator>>(istream& stream, cCharactersInfo& info)
+	friend std::istream& operator>>(std::istream& stream, cCharactersInfo& info)
 	{
 		int nPlayers = 0;
 		int SessionId = 0;

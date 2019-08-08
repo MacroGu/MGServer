@@ -7,10 +7,10 @@
 
 // static 变量初始化
 float				MainIocp::HitPoint = 0.1f;
-map<int, SOCKET>	MainIocp::SessionSocket;
+std::map<int, SOCKET>	MainIocp::SessionSocket;
 cCharactersInfo		MainIocp::CharactersInfo;
-CRITICAL_SECTION	MainIocp::csPlayers;
 MonsterSet			MainIocp::MonstersInfo;
+std::mutex g_mutex;
 
 unsigned int WINAPI CallWorkerThread(LPVOID p)
 {
@@ -28,7 +28,6 @@ unsigned int WINAPI CallMonsterThread(LPVOID p)
 
 MainIocp::MainIocp()
 {
-	InitializeCriticalSection(&csPlayers);
 
 	if (!MysqlHandle::GetInstance().Init())
 	{
@@ -175,9 +174,9 @@ void MainIocp::MonsterManagementThread()
 		// 0.5 每秒向客户发送怪物信息
 		if (count > 15)
 		{
-			stringstream SendStream;
-			SendStream << EPacketType::SYNC_MONSTER << endl;
-			SendStream << MonstersInfo << endl;
+			std::stringstream SendStream;
+			SendStream << EPacketType::SYNC_MONSTER << std::endl;
+			SendStream << MonstersInfo << std::endl;
 
 			count = 0;
 			Broadcast(SendStream);
@@ -270,7 +269,7 @@ void MainIocp::WorkerThread()
 			// 包类型
 			int PacketType;
 			// 反序列化客户端信息
-			stringstream RecvStream;
+			std::stringstream RecvStream;
 
 			RecvStream << pSocketInfo->dataBuf.buf;
 			RecvStream >> PacketType;
@@ -295,19 +294,19 @@ void MainIocp::WorkerThread()
 	}
 }
 
-void MainIocp::SignUp(stringstream& RecvStream, stSOCKETINFO* pSocket)
+void MainIocp::SignUp(std::stringstream& RecvStream, stSOCKETINFO* pSocket)
 {
-	string Id;
-	string Pw;
+	std::string Id;
+	std::string Pw;
 
 	RecvStream >> Id;
 	RecvStream >> Pw;
 
 	LOG_INFO("[INFO] 注册客户端 {}/{}\n", Id, Pw);
 
-	stringstream SendStream;
-	SendStream << EPacketType::SIGNUP << endl;
-	SendStream << MysqlHandle::GetInstance().SignUpAccount(Id, Pw) << endl;
+	std::stringstream SendStream;
+	SendStream << EPacketType::SIGNUP << std::endl;
+	SendStream << MysqlHandle::GetInstance().SignUpAccount(Id, Pw) << std::endl;
 
 	CopyMemory(pSocket->messageBuffer, (CHAR*)SendStream.str().c_str(), SendStream.str().length());
 	pSocket->dataBuf.buf = pSocket->messageBuffer;
@@ -316,19 +315,19 @@ void MainIocp::SignUp(stringstream& RecvStream, stSOCKETINFO* pSocket)
 	Send(pSocket);
 }
 
-void MainIocp::Login(stringstream& RecvStream, stSOCKETINFO* pSocket)
+void MainIocp::Login(std::stringstream& RecvStream, stSOCKETINFO* pSocket)
 {
-	string Id;
-	string Pw;
+	std::string Id;
+	std::string Pw;
 
 	RecvStream >> Id;
 	RecvStream >> Pw;
 
 	LOG_INFO("[INFO] 登录尝试 {}/{}\n", Id, Pw);
 
-	stringstream SendStream;
-	SendStream << EPacketType::LOGIN << endl;
-	SendStream << MysqlHandle::GetInstance().SearchAccount(Id, Pw) << endl;
+	std::stringstream SendStream;
+	SendStream << EPacketType::LOGIN << std::endl;
+	SendStream << MysqlHandle::GetInstance().SearchAccount(Id, Pw) << std::endl;
 
 	CopyMemory(pSocket->messageBuffer, (CHAR*)SendStream.str().c_str(), SendStream.str().length());
 	pSocket->dataBuf.buf = pSocket->messageBuffer;
@@ -337,7 +336,7 @@ void MainIocp::Login(stringstream& RecvStream, stSOCKETINFO* pSocket)
 	Send(pSocket);
 }
 
-void MainIocp::EnrollCharacter(stringstream& RecvStream, stSOCKETINFO* pSocket)
+void MainIocp::EnrollCharacter(std::stringstream& RecvStream, stSOCKETINFO* pSocket)
 {
 	cCharacter info;
 	RecvStream >> info;
@@ -345,7 +344,7 @@ void MainIocp::EnrollCharacter(stringstream& RecvStream, stSOCKETINFO* pSocket)
 	LOG_INFO("[INFO][{}] 角色注册 - X : [{}], Y : [{}], Z : [{}], Yaw : [{}], Alive : [{}], Health : [{}]\n",
 		info.SessionId, info.X, info.Y, info.Z, info.Yaw, info.IsAlive, info.HealthValue);
 
-	EnterCriticalSection(&csPlayers);
+	g_mutex.lock();
 
 	cCharacter* pinfo = &CharactersInfo.players[info.SessionId];
 
@@ -370,8 +369,7 @@ void MainIocp::EnrollCharacter(stringstream& RecvStream, stSOCKETINFO* pSocket)
 	pinfo->HealthValue = info.HealthValue;
 	pinfo->IsAttacking = info.IsAttacking;
 
-	LeaveCriticalSection(&csPlayers);
-
+	g_mutex.unlock();
 	SessionSocket[info.SessionId] = pSocket->socket;
 
 	LOG_INFO("[INFO] 客户端数量 : {}\n", SessionSocket.size());
@@ -380,15 +378,14 @@ void MainIocp::EnrollCharacter(stringstream& RecvStream, stSOCKETINFO* pSocket)
 	BroadcastNewPlayer(info);
 }
 
-void MainIocp::SyncCharacters(stringstream& RecvStream, stSOCKETINFO* pSocket)
+void MainIocp::SyncCharacters(std::stringstream& RecvStream, stSOCKETINFO* pSocket)
 {
 	cCharacter info;
 	RecvStream >> info;
 
 	// 	 	LOG_INFO("[INFO][{}] 接收信息 - {}\n",
 	// 	 		info.SessionId, info.IsAttacking);	
-	EnterCriticalSection(&csPlayers);
-
+	g_mutex.lock();
 	cCharacter* pinfo = &CharactersInfo.players[info.SessionId];
 
 	// 保存角色的位置					
@@ -409,54 +406,53 @@ void MainIocp::SyncCharacters(stringstream& RecvStream, stSOCKETINFO* pSocket)
 
 	pinfo->IsAttacking = info.IsAttacking;
 
-	LeaveCriticalSection(&csPlayers);
-
+	g_mutex.unlock();
 	WriteCharactersInfoToSocket(pSocket);
 	Send(pSocket);
 }
 
-void MainIocp::LogoutCharacter(stringstream& RecvStream, stSOCKETINFO* pSocket)
+void MainIocp::LogoutCharacter(std::stringstream& RecvStream, stSOCKETINFO* pSocket)
 {
 	int SessionId;
 	RecvStream >> SessionId;
 	LOG_INFO("[INFO] ({})接收注销请求\n", SessionId);
-	EnterCriticalSection(&csPlayers);
+	g_mutex.lock();
 	CharactersInfo.players[SessionId].IsAlive = false;
-	LeaveCriticalSection(&csPlayers);
+	g_mutex.unlock();
 	SessionSocket.erase(SessionId);
 	LOG_INFO("[INFO] 客户数量 : %d\n", SessionSocket.size());
 	WriteCharactersInfoToSocket(pSocket);
 }
 
-void MainIocp::HitCharacter(stringstream& RecvStream, stSOCKETINFO* pSocket)
+void MainIocp::HitCharacter(std::stringstream& RecvStream, stSOCKETINFO* pSocket)
 {
 	// 点击会话ID
 	int DamagedSessionId;
 	RecvStream >> DamagedSessionId;
 	LOG_INFO("[INFO] %d 收到的伤害 \n", DamagedSessionId);
-	EnterCriticalSection(&csPlayers);
+	g_mutex.lock();
 	CharactersInfo.players[DamagedSessionId].HealthValue -= HitPoint;
 	if (CharactersInfo.players[DamagedSessionId].HealthValue < 0)
 	{
 		// 性格死亡治疗
 		CharactersInfo.players[DamagedSessionId].IsAlive = false;
 	}
-	LeaveCriticalSection(&csPlayers);
+	g_mutex.unlock();
 	WriteCharactersInfoToSocket(pSocket);
 	Send(pSocket);
 }
 
-void MainIocp::BroadcastChat(stringstream& RecvStream, stSOCKETINFO* pSocket)
+void MainIocp::BroadcastChat(std::stringstream& RecvStream, stSOCKETINFO* pSocket)
 {
 	stSOCKETINFO* client = new stSOCKETINFO;
 
 	int SessionId;
-	string Temp;
-	string Chat;
+	std::string Temp;
+	std::string Chat;
 
 	RecvStream >> SessionId;
 	getline(RecvStream, Temp);
-	Chat += to_string(SessionId) + "_:_";
+	Chat += std::to_string(SessionId) + "_:_";
 	while (RecvStream >> Temp)
 	{
 		Chat += Temp + "_";
@@ -465,14 +461,14 @@ void MainIocp::BroadcastChat(stringstream& RecvStream, stSOCKETINFO* pSocket)
 
 	LOG_INFO("[CHAT] {}\n", Chat);
 
-	stringstream SendStream;
-	SendStream << EPacketType::CHAT << endl;
+	std::stringstream SendStream;
+	SendStream << EPacketType::CHAT << std::endl;
 	SendStream << Chat;
 
 	Broadcast(SendStream);
 }
 
-void MainIocp::HitMonster(stringstream& RecvStream, stSOCKETINFO* pSocket)
+void MainIocp::HitMonster(std::stringstream& RecvStream, stSOCKETINFO* pSocket)
 {
 	// 怪物命中处理
 	int MonsterId;
@@ -481,9 +477,9 @@ void MainIocp::HitMonster(stringstream& RecvStream, stSOCKETINFO* pSocket)
 
 	if (!MonstersInfo.monsters[MonsterId].IsAlive())
 	{
-		stringstream SendStream;
-		SendStream << EPacketType::DESTROY_MONSTER << endl;
-		SendStream << MonstersInfo.monsters[MonsterId] << endl;
+		std::stringstream SendStream;
+		SendStream << EPacketType::DESTROY_MONSTER << std::endl;
+		SendStream << MonstersInfo.monsters[MonsterId] << std::endl;
 
 		Broadcast(SendStream);
 
@@ -491,22 +487,22 @@ void MainIocp::HitMonster(stringstream& RecvStream, stSOCKETINFO* pSocket)
 	}
 
 	// 向其他玩家广播
-	/*stringstream SendStream;
-	SendStream << EPacketType::HIT_MONSTER << endl;
-	SendStream << MonstersInfo << endl;
+	/*std::stringstream SendStream;
+	SendStream << EPacketType::HIT_MONSTER << std::endl;
+	SendStream << MonstersInfo << std::endl;
 	Broadcast(SendStream);*/
 }
 
 void MainIocp::BroadcastNewPlayer(cCharacter& player)
 {
-	stringstream SendStream;
-	SendStream << EPacketType::ENTER_NEW_PLAYER << endl;
-	SendStream << player << endl;
+	std::stringstream SendStream;
+	SendStream << EPacketType::ENTER_NEW_PLAYER << std::endl;
+	SendStream << player << std::endl;
 
 	Broadcast(SendStream);
 }
 
-void MainIocp::Broadcast(stringstream& SendStream)
+void MainIocp::Broadcast(std::stringstream& SendStream)
 {
 	stSOCKETINFO* client = new stSOCKETINFO;
 	for (const auto& kvp : SessionSocket)
@@ -522,11 +518,11 @@ void MainIocp::Broadcast(stringstream& SendStream)
 
 void MainIocp::WriteCharactersInfoToSocket(stSOCKETINFO* pSocket)
 {
-	stringstream SendStream;
+	std::stringstream SendStream;
 
 	// 序列化
-	SendStream << EPacketType::RECV_PLAYER << endl;
-	SendStream << CharactersInfo << endl;
+	SendStream << EPacketType::RECV_PLAYER << std::endl;
+	SendStream << CharactersInfo << std::endl;
 
 	// ！ 重要!!! 将数据直接写入data.buf可以发送垃圾
 	CopyMemory(pSocket->messageBuffer, (CHAR*)SendStream.str().c_str(), SendStream.str().length());

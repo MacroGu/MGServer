@@ -11,8 +11,6 @@
 #include "defines.h"
 #include "CommonClass.h"
 
-using namespace std;
-
 #define	MAX_BUFFER		4096
 #define SERVER_PORT		8000
 #define MAX_CLIENTS		100
@@ -31,7 +29,7 @@ struct stSOCKETINFO
 // 包处理函数指针
 struct FuncProcess
 {
-	void(*funcProcessPacket)(stringstream& RecvStream, stSOCKETINFO* pSocket);
+	void(*funcProcessPacket)(std::stringstream& RecvStream, stSOCKETINFO* pSocket);
 	FuncProcess()
 	{
 		funcProcessPacket = nullptr;
