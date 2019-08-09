@@ -14,28 +14,8 @@
 #include <iostream>
 #include "EpollSocket.h"
 #include "CommonClass.h"
+#include "GameServerWatcher.h"
 
-// socket ¥¶¿Ì¿‡
-class GameSocketWatcher : public BaseSocketWatcher
-{
-public:
-	GameSocketWatcher();
-
-	virtual ~GameSocketWatcher();
-
-	virtual int OnEpollAcceptEvent(stSocketContext &socket_context);
-
-	virtual int OnEpollReadableEvent(int &epollfd, epoll_event &event);
-
-	virtual int OnEpollWriteableEvent(stSocketContext &socket_context);
-
-	virtual int OnEpollCloseEvent(stSocketContext &socket_context);
-
-private:
-	// handle client message
-	bool HandleClientNormalSocketData(stSocketContext *socket_context, char clientData[], int dataLength);
-
-};
 
 class CGameServer
 {

@@ -125,9 +125,3 @@ public:
 	}
 };
 
-class CommonClass
-{
-public:
-	CommonClass();
-	~CommonClass();
-};

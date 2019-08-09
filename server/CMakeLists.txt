@@ -20,8 +20,10 @@ set(HEADER_FILES
 	${HEADER_FILES_PREFIX}/sha1.h
 	${HEADER_FILES_PREFIX}/MysqlHandle.h
 	${HEADER_FILES_PREFIX}/Monster.h
+	${HEADER_FILES_PREFIX}/player.h
 	${HEADER_FILES_PREFIX}/IocpBase.h
 	${HEADER_FILES_PREFIX}/MainIocp.h
+	${HEADER_FILES_PREFIX}/GameServerWatcher.h
 	${HEADER_FILES_PREFIX}/GameServer.h
 )
 
@@ -37,8 +39,10 @@ set(SOURCE_FILES
 	${SOURCE_FILES_PREFIX}/sha1.cpp
 	${SOURCE_FILES_PREFIX}/MysqlHandle.cpp
 	${SOURCE_FILES_PREFIX}/Monster.cpp
+	${SOURCE_FILES_PREFIX}/player.cpp
 	${SOURCE_FILES_PREFIX}/IocpBase.cpp
 	${SOURCE_FILES_PREFIX}/MainIocp.cpp
+	${SOURCE_FILES_PREFIX}/GameServerWatcher.cpp
 	${SOURCE_FILES_PREFIX}/GameServer.cpp
 	main.cpp
 )
