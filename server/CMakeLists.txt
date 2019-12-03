@@ -24,6 +24,8 @@ set(BASE_FILES
 	${SOURCE_FILES_PREFIX}/MysqlHandle.cpp
 	${SOURCE_FILES_PREFIX}/GameServer.h
 	${SOURCE_FILES_PREFIX}/GameServer.cpp
+	${SOURCE_FILES_PREFIX}/GameSocketWatcher.h
+	${SOURCE_FILES_PREFIX}/GameSocketWatcher.cpp	
 	main.cpp
 )
 

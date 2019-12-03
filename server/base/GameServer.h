@@ -11,37 +11,14 @@
 #include <map>
 #include <set>
 #include <stdint.h>
-#include <iostream>
-#include "EpollSocket.h"
-#include "CommonClass.h"
+#include "GameSocketWatcher.h"
 
-// socket 处理类
-class GameSocketWatcher : public BaseSocketWatcher
+
+class GameServer
 {
 public:
-	GameSocketWatcher();
-
-	virtual ~GameSocketWatcher();
-
-	virtual int OnEpollAcceptEvent(stSocketContext& socket_context);
-
-	virtual int OnEpollReadableEvent(int& epollfd, epoll_event& event);
-
-	virtual int OnEpollWriteableEvent(stSocketContext& socket_context);
-
-	virtual int OnEpollCloseEvent(stSocketContext& socket_context);
-
-private:
-	// handle client message
-	bool HandleClientNormalSocketData(stSocketContext* socket_context, char clientData[], int dataLength);
-
-};
-
-class CGameServer
-{
-public:
-	CGameServer();
-	~CGameServer();
+	GameServer();
+	~GameServer();
 
 	// 初始化服务器
 	bool InitServer();
