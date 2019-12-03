@@ -15,12 +15,3 @@ cCharactersInfo::cCharactersInfo()
 cCharactersInfo::~cCharactersInfo()
 {
 }
-
-CommonClass::CommonClass()
-{
-}
-
-
-CommonClass::~CommonClass()
-{
-}

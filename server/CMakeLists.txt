@@ -16,7 +16,6 @@ set(HEADER_FILES
 	${HEADER_FILES_PREFIX}/EpollSocket.h
 	${HEADER_FILES_PREFIX}/RedisHandle.h
 	${HEADER_FILES_PREFIX}/MysqlHandle.h
-	${HEADER_FILES_PREFIX}/GameServerWatcher.h
 	${HEADER_FILES_PREFIX}/GameServer.h
 )
 
@@ -28,7 +27,6 @@ set(SOURCE_FILES
 	${SOURCE_FILES_PREFIX}/EpollSocket.cpp
 	${SOURCE_FILES_PREFIX}/RedisHandle.cpp
 	${SOURCE_FILES_PREFIX}/MysqlHandle.cpp
-	${SOURCE_FILES_PREFIX}/GameServerWatcher.cpp
 	${SOURCE_FILES_PREFIX}/GameServer.cpp
 	main.cpp
 )
