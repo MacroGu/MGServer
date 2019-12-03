@@ -17,7 +17,7 @@
 
 struct stMsgToClient
 {
-	std::string temp;
+	char temp[128];
 };
 
 // socket ¥¶¿Ì¿‡

@@ -5,6 +5,7 @@
 */
 
 #include <iostream>
+#include <cstring>
 #include <stdint.h>
 #include <nlohmann/json.hpp>
 #include "GameSocketWatcher.h"
@@ -29,7 +30,7 @@ int GameSocketWatcher::OnEpollAcceptEvent(stSocketContext& socket_context)
 	std::string clientIP = socket_context.client_ip;
 	LOG_INFO("accept client IP: {}, connected fd: {}", clientIP, conn_sock);
 	stMsgToClient tempMsg;
-	allClients.insert(std::pair<int, stMsgToClient>(conn_sock, tempMsg));
+	allClients.insert(std::make_pair(conn_sock, tempMsg));
 
 	return 0;
 }
@@ -58,7 +59,11 @@ int GameSocketWatcher::OnEpollReadableEvent(int& epollfd, epoll_event& event)
 	}
 	//DEBUG_MSG("read success which read size: " << read_size);
 
-	curClient.temp = read_buffer;
+	for (auto oneClientIter = allClients.begin(); oneClientIter != allClients.end(); ++oneClientIter)
+	{
+		memcpy(oneClientIter->second.temp, read_buffer, read_size);
+		oneClientIter->second.temp[read_size] = '\0';
+	}
 
 	// read_buffer can be parsed data here
 	this->HandleClientNormalSocketData(socket_context, read_buffer, read_size);
@@ -82,7 +87,7 @@ int GameSocketWatcher::OnEpollWriteableEvent(stSocketContext& socket_context)
 	// ²âÊÔ¹ã²¥ 
 	for (auto oneClientIter = allClients.begin(); oneClientIter != allClients.end(); ++oneClientIter)
 	{
-		int ret = send(oneClientIter->first, oneClientIter->second.temp.c_str(), oneClientIter->second.temp.length(), 0);
+		int ret = send(oneClientIter->first, oneClientIter->second.temp, std::strlen(oneClientIter->second.temp), 0);
 		if (ret < 0)
 		{
 			LOG_ERROR("2 send data to client failed ! client fd:  client IP: {}",
