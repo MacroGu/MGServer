@@ -1,43 +1,37 @@
 cmake_minimum_required(VERSION 2.8.9)
 project(server)
 
-# Add header file include directories
-include_directories(./ ./header ../ ../websocketpp ../wepoll/include)
+
+include_directories(./ ./base ../ ../websocketpp ../wepoll/include)
 link_directories(../libs/mysql)
 
-set(HEADER_FILES_PREFIX header)
-set(HEADER_FILES
+set(SOURCE_FILES_PREFIX base)
+set(BASE_FILES 
 	singleton.h
 	protocol.h
-	${HEADER_FILES_PREFIX}/defines.h
-	${HEADER_FILES_PREFIX}/ServerLog.h
-	${HEADER_FILES_PREFIX}/ServerConf.h
-	${HEADER_FILES_PREFIX}/WorkerThread.h
-	${HEADER_FILES_PREFIX}/EpollSocket.h
-	${HEADER_FILES_PREFIX}/RedisHandle.h
-	${HEADER_FILES_PREFIX}/MysqlHandle.h
-	${HEADER_FILES_PREFIX}/GameServer.h
-)
-
-set(SOURCE_FILES_PREFIX source)
-set(SOURCE_FILES 
+	${SOURCE_FILES_PREFIX}/defines.h
+	${SOURCE_FILES_PREFIX}/ServerLog.h	
     ${SOURCE_FILES_PREFIX}/ServerLog.cpp
+	${SOURCE_FILES_PREFIX}/ServerConf.h
 	${SOURCE_FILES_PREFIX}/ServerConf.cpp
+	${SOURCE_FILES_PREFIX}/WorkerThread.h
 	${SOURCE_FILES_PREFIX}/WorkerThread.cpp
+	${SOURCE_FILES_PREFIX}/EpollSocket.h
 	${SOURCE_FILES_PREFIX}/EpollSocket.cpp
+	${SOURCE_FILES_PREFIX}/RedisHandle.h
 	${SOURCE_FILES_PREFIX}/RedisHandle.cpp
+	${SOURCE_FILES_PREFIX}/MysqlHandle.h
 	${SOURCE_FILES_PREFIX}/MysqlHandle.cpp
+	${SOURCE_FILES_PREFIX}/GameServer.h
 	${SOURCE_FILES_PREFIX}/GameServer.cpp
 	main.cpp
 )
 
-source_group(header FILES ${HEADER_FILES})
-source_group(source FILES ${SOURCE_FILES})
+source_group(base FILES ${BASE_FILES})
 
 # Target
 add_executable(server
-    ${HEADER_FILES}
-    ${SOURCE_FILES}
+    ${BASE_FILES}
 )
 if(MSVC)
 	target_link_libraries(server tinyxml hiredis MsgPacket wepoll libmysql ws2_32)
