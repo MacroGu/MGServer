@@ -44,8 +44,8 @@ public:
 
 private:
 
-	// 释放整个线程池资源
-	void ReleaseThreadPool();
+	// 释放整个工作线程资源
+	void ReleaseWorkerThread();
 
 	// 执行线程 
 	void ExecuteThread();

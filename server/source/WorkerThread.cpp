@@ -35,7 +35,7 @@ WorkerThread::~WorkerThread()
     // Release resources
     if (bThreadPoolRunning != false) 
 	{
-        ReleaseThreadPool();
+        ReleaseWorkerThread();
     }
 }
 
@@ -68,7 +68,7 @@ void WorkerThread::SetTaskSizeLimit(int size)
     TasksNumsLimitSize = size;
 }
 
-void WorkerThread::ReleaseThreadPool()
+void WorkerThread::ReleaseWorkerThread()
 {
 	bThreadPoolRunning = false;
 
@@ -90,6 +90,7 @@ void WorkerThread::ExecuteThread()
 	while(bThreadPoolRunning != false) 
 	{
 		// If the thread was woken up to notify process shutdown, return from here
+		// ÓÎÏ·Âß¼­Ö÷Ñ­»·
 		if (bThreadPoolRunning == false) 
 		{
 			std::stringstream ss;
