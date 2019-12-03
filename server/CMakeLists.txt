@@ -14,8 +14,14 @@ set(HEADER_FILES
 	${HEADER_FILES_PREFIX}/ServerConf.h
 	${HEADER_FILES_PREFIX}/WorkerThread.h
 	${HEADER_FILES_PREFIX}/EpollSocket.h
+	${HEADER_FILES_PREFIX}/WebSocketStyle.h
 	${HEADER_FILES_PREFIX}/RedisHandle.h
+	${HEADER_FILES_PREFIX}/base64.h
+	${HEADER_FILES_PREFIX}/sha1.h
 	${HEADER_FILES_PREFIX}/MysqlHandle.h
+
+
+	${HEADER_FILES_PREFIX}/GameServerWatcher.h
 	${HEADER_FILES_PREFIX}/GameServer.h
 )
 
@@ -25,8 +31,14 @@ set(SOURCE_FILES
 	${SOURCE_FILES_PREFIX}/ServerConf.cpp
 	${SOURCE_FILES_PREFIX}/WorkerThread.cpp
 	${SOURCE_FILES_PREFIX}/EpollSocket.cpp
+	${SOURCE_FILES_PREFIX}/WebSocketStyle.cpp
 	${SOURCE_FILES_PREFIX}/RedisHandle.cpp
+	${SOURCE_FILES_PREFIX}/base64.cpp
+	${SOURCE_FILES_PREFIX}/sha1.cpp
 	${SOURCE_FILES_PREFIX}/MysqlHandle.cpp
+
+
+	${SOURCE_FILES_PREFIX}/GameServerWatcher.cpp
 	${SOURCE_FILES_PREFIX}/GameServer.cpp
 	main.cpp
 )
