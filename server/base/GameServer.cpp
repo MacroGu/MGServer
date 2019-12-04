@@ -12,7 +12,9 @@
 #include "ServerConf.h"
 #include "RedisHandle.h"
 #include "MysqlHandle.h"
+#include "Interface.h"
 
+extern Interface gInterface;
 
 GameServer::GameServer()
 {
@@ -20,7 +22,6 @@ GameServer::GameServer()
 
 GameServer::~GameServer()
 {
-	// WebSocketPool.StopEpoll();
 	SocketPool.StopEpoll();
 }
 
@@ -55,8 +56,13 @@ void GameServer::StartServer()
 {
 	if (!InitServer()) return;
 
+	GameSocketWatcher watcher;
 	SocketPool.SetAddressInfo(ADDRESS_INFO_CONFIGURE);
-	SocketPool.SetSocketWatcher(new GameSocketWatcher());
+	SocketPool.SetSocketWatcher(&watcher);
+
+
+	gInterface.SetSocketPool(&SocketPool);
+	gInterface.SetGameSocketWatcher(&watcher);
 
 	if (!SocketPool.StartEpoll()) return;
 

@@ -251,6 +251,25 @@ void EpollSocket::SetSocketWatcher(BaseSocketWatcher* watcher)
 	this->Watcher = watcher;
 }
 
+void EpollSocket::DisconnectOneClient(int clientFD)
+{
+	epoll_event disconnectEvent;
+	disconnectEvent.events = EPOLLIN | EPOLLOUT;
+	epoll_ctl(_epollfd, EPOLL_CTL_DEL, clientFD, &disconnectEvent);
+
+#ifndef _WIN32
+	int ret = close(fd);
+#else
+	int ret = closesocket(clientFD);
+#endif
+
+	if (ret != 0)
+	{
+		LOG_ERROR("connect close complete which fd: {}, ret: {}", clientFD, ret);
+		return;
+	}
+}
+
 bool EpollSocket::InitWorkerThread() 
 {
     WorkerThreadPtr = new WorkerThread();
@@ -314,6 +333,7 @@ void EpollSocket::HandleEpollEvent(epoll_event &e)
 	else 
 	{
 		LOG_WARN("unknown events : {}" , e.events);
+		CloseAndReleaseOneEvent(e);		//无法识别的 event 都直接断线
     }
 }
 

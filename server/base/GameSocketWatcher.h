@@ -17,20 +17,25 @@
 
 struct stMsgToClient
 {
-	char temp[128];
+	char data[SS_WRITE_BUFFER_SIZE];
+	int dataLen;
+
+	stMsgToClient()
+	{
+		memset(data, 0, SS_WRITE_BUFFER_SIZE);
+		dataLen = 0;
+	}
+
+	~stMsgToClient()
+	{
+		memset(data, 0, SS_WRITE_BUFFER_SIZE);
+		dataLen = 0;
+	}
 };
 
 // socket 处理类
 class GameSocketWatcher : public BaseSocketWatcher
 {
-public:
-	// 一些暴露给游戏逻辑的接口
-	// 广播 1 ， 由客户端收到消息后，经过处理，再进行广播，
-
-	// 广播 2 ，服务器产生的事件，比如定时事件，而主动广播
-
-
-	// 发送给指定客户端
 
 public:
 	GameSocketWatcher();
@@ -45,12 +50,19 @@ public:
 
 	virtual int OnEpollCloseEvent(stSocketContext& socket_context) override;
 
+
+public:
+	int SentDataToOneClient(int ClientFD, std::shared_ptr<stMsgToClient> sendData);
+	void SendDataToCurClient(std::shared_ptr<stMsgToClient> toCurClient);
+
+
 private:
 	// handle client message
 	bool HandleClientNormalSocketData(stSocketContext* socket_context, char clientData[], int dataLength);
 
 
 private:
-	std::map<int, stMsgToClient> allClients;		// 所有的客户端
-	stMsgToClient curClient;		// 当前的客户端
+	std::shared_ptr<stMsgToClient> toCurClientData;  // 当前的客户端 的数据，效率高
+	stSocketContext* curClient;						 // 当前处理消息的 对应的客户端
+	std::map<int, stSocketContext> allClients;		 // 所有的客户端
 };

@@ -13,15 +13,22 @@
 #include "ServerConf.h"
 #include "RedisHandle.h"
 #include "MysqlHandle.h"
+#include "Interface.h"
 
+extern Interface gInterface;
 
 GameSocketWatcher::GameSocketWatcher()
 {
+	toCurClientData = nullptr;
+	curClient = nullptr;
+	allClients.clear();
 }
 
 GameSocketWatcher::~GameSocketWatcher()
 {
-
+	toCurClientData = nullptr;
+	curClient = nullptr;
+	allClients.clear();
 }
 
 int GameSocketWatcher::OnEpollAcceptEvent(stSocketContext& socket_context)
@@ -29,8 +36,11 @@ int GameSocketWatcher::OnEpollAcceptEvent(stSocketContext& socket_context)
 	int conn_sock = socket_context.fd;
 	std::string clientIP = socket_context.client_ip;
 	LOG_INFO("accept client IP: {}, connected fd: {}", clientIP, conn_sock);
-	stMsgToClient tempMsg;
-	allClients.insert(std::make_pair(conn_sock, tempMsg));
+
+	curClient = &socket_context;
+	toCurClientData = nullptr;
+	allClients.insert(std::make_pair(socket_context.fd, socket_context));
+	gInterface.NewClientAcceptCallBack(conn_sock);
 
 	return 0;
 }
@@ -59,11 +69,6 @@ int GameSocketWatcher::OnEpollReadableEvent(int& epollfd, epoll_event& event)
 	}
 	//DEBUG_MSG("read success which read size: " << read_size);
 
-	for (auto oneClientIter = allClients.begin(); oneClientIter != allClients.end(); ++oneClientIter)
-	{
-		memcpy(oneClientIter->second.temp, read_buffer, read_size);
-		oneClientIter->second.temp[read_size] = '\0';
-	}
 
 	// read_buffer can be parsed data here
 	this->HandleClientNormalSocketData(socket_context, read_buffer, read_size);
@@ -74,42 +79,63 @@ int GameSocketWatcher::OnEpollReadableEvent(int& epollfd, epoll_event& event)
 int GameSocketWatcher::OnEpollWriteableEvent(stSocketContext& socket_context)
 {
 	int client_fd = socket_context.fd;
-	socket_context.stToClient = curClient.temp;
-
-// 	int ret = send(socket_context.fd, socket_context.stToClient.c_str(), socket_context.stToClient.length(), 0);
-// 	if (ret < 0)
-// 	{
-// 		LOG_ERROR("send data to client failed ! client fd:  client IP: {}",
-// 			client_fd, socket_context.client_ip);
-// 		return WRITE_CONN_CLOSE;
-// 	}
-
-	// ²âÊÔ¹ã²¥ 
-	for (auto oneClientIter = allClients.begin(); oneClientIter != allClients.end(); ++oneClientIter)
+	if (toCurClientData != nullptr)
 	{
-		int ret = send(oneClientIter->first, oneClientIter->second.temp, std::strlen(oneClientIter->second.temp), 0);
+		int ret = send(socket_context.fd, toCurClientData->data, toCurClientData->dataLen, 0);
 		if (ret < 0)
 		{
-			LOG_ERROR("2 send data to client failed ! client fd:  client IP: {}",
+			LOG_ERROR("send data to client failed ! client fd:  client IP: {}",
 				client_fd, socket_context.client_ip);
 			return WRITE_CONN_CLOSE;
 		}
 	}
 
-
+	curClient = nullptr;
 	return WRITE_CONN_ALIVE;
 }
 
 int GameSocketWatcher::OnEpollCloseEvent(stSocketContext& socket_context)
 {
 	LOG_DEBUG("close client client ip: {} client fd: {}", socket_context.client_ip, socket_context.fd);
-	auto closeClient = allClients.find(socket_context.fd);
-	if (closeClient != allClients.end())
+	gInterface.DissconnectClientCallBack(socket_context.fd);
+
+	auto clientIter = allClients.find(socket_context.fd);
+	if (clientIter != allClients.end())
 	{
-		allClients.erase(closeClient);
+		allClients.erase(clientIter);
+	}
+	else
+	{
+		LOG_ERROR("client close but not in server fd: {} , ip: {}", socket_context.fd, socket_context.client_ip);
+	}
+
+	curClient = nullptr;
+	return 0;
+}
+
+int GameSocketWatcher::SentDataToOneClient(int ClientFD, std::shared_ptr<stMsgToClient> sendData)
+{
+	auto clientIter = allClients.find(ClientFD);
+	if (clientIter == allClients.end())
+	{
+		LOG_ERROR("send data to client failed ! can not found this client FD: {}", ClientFD);
+		return WRITE_CONN_CLOSE;
+	}
+
+	int ret = send(ClientFD, sendData->data, sendData->dataLen, 0);
+	if (ret < 0)
+	{
+		allClients.erase(clientIter);
+		LOG_ERROR("send data to client failed ! client fd: {}  client IP: {}", ClientFD, clientIter->second.client_ip);
+		return WRITE_CONN_CLOSE;
 	}
 
 	return 0;
+}
+
+void GameSocketWatcher::SendDataToCurClient(std::shared_ptr<stMsgToClient> toCurClient)
+{
+	toCurClientData = toCurClient;
 }
 
 bool GameSocketWatcher::HandleClientNormalSocketData(stSocketContext* socket_context, char clientData[], int dataLength)
@@ -117,5 +143,10 @@ bool GameSocketWatcher::HandleClientNormalSocketData(stSocketContext* socket_con
 	LOG_INFO("recv client data: {}", clientData);
 
 	// socket_context->stToClient = std::to_string();
+	std::shared_ptr<stMsgToClient> recvData(new stMsgToClient());
+	memcpy(recvData->data, clientData, dataLength);
+	recvData->dataLen = dataLength;
+	gInterface.RecvClientDataCallBack(socket_context->fd, recvData);
+
 	return true;
 }

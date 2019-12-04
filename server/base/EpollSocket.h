@@ -30,14 +30,12 @@ public:
 	int fd;
 	std::string client_ip;
 	uint16_t uiMessageID;	// store client message ID
-	std::string stToClient;	// response to client 只有 string json
 
 	stSocketContext()
 	{
 		fd = 0;
 		client_ip = "";
 		uiMessageID = 0;
-		stToClient = "";
 	}
 
 	~stSocketContext()
@@ -130,6 +128,9 @@ public:
 		void SetAddressInfo(const stAddressInfo& addressInfo);
 		
 		void SetSocketWatcher(BaseSocketWatcher* watcher);
+
+		// 主动关闭指定客户端
+		void DisconnectOneClient(int clientFD);
 };
 
 struct TaskData 
