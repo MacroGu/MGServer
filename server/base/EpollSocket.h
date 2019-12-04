@@ -95,8 +95,6 @@ private:
 
         void HandleEpollEvent(epoll_event &e);
 
-        void StartEpollEventLoop();
-
 		void ReadTaskInThreads(void* data);
 
 		stAddressInfo AddressInfo;
@@ -128,6 +126,8 @@ public:
 		void SetAddressInfo(const stAddressInfo& addressInfo);
 		
 		void SetSocketWatcher(BaseSocketWatcher* watcher);
+
+		void StartEpollEventLoop(std::function<void()> callBackFun);
 
 		// 主动关闭指定客户端
 		void DisconnectOneClient(int clientFD);

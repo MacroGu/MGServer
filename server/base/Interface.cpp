@@ -78,6 +78,12 @@ void Interface::SendDataToCurClient(std::shared_ptr<stMsgToClient> sendData)
 	Watcher->SendDataToCurClient(sendData);
 }
 
+void Interface::GameLogicLoop()
+{
+	LOG_INFO("CALL Interface::GameLogicLoop");
+	MsgDistribute::GetInstance().RunGameLogic();
+}
+
 void Interface::SetSocketPool(EpollSocket* mSocketPool)
 {
 	if (!mSocketPool)

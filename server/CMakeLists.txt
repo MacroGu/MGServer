@@ -35,6 +35,10 @@ set(SOURCE_FILES_GAMELOGIC gamelogic)
 set(GAMELOGIC_FILES 
 	${SOURCE_FILES_GAMELOGIC}/MsgDistribute.h
 	${SOURCE_FILES_GAMELOGIC}/MsgDistribute.cpp
+	${SOURCE_FILES_GAMELOGIC}/EntityPlayer.h
+	${SOURCE_FILES_GAMELOGIC}/EntityPlayer.cpp	
+	${SOURCE_FILES_GAMELOGIC}/Monster.h
+	${SOURCE_FILES_GAMELOGIC}/Monster.cpp		
 )
 
 source_group(base FILES ${BASE_FILES} )

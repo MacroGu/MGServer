@@ -31,6 +31,8 @@ public:
 	int SendDataToClient(int ClientFD, std::shared_ptr<stMsgToClient> sendData);
 	// 发生消息给当前客户端 （当前消息来的客户端）
 	void SendDataToCurClient(std::shared_ptr<stMsgToClient> sendData);
+	// 游戏逻辑被调用的主循环
+	void GameLogicLoop();
 
 public:
 	void SetSocketPool(EpollSocket* SocketPool);

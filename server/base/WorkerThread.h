@@ -32,15 +32,15 @@ class WorkerThread
 {
 public:
 
-        WorkerThread();
-        ~WorkerThread();
+    WorkerThread();
+    ~WorkerThread();
 
-        bool Start();
+    bool Start();
 
-		// 添加task 到线程池执行队列
-        bool AddTask(Task *task);
+	// 添加task 到线程池执行队列
+    bool AddTask(Task *task);
 
-		void SetTaskSizeLimit(int size);
+	void SetTaskSizeLimit(int size);
 
 private:
 
@@ -55,15 +55,15 @@ private:
 
 private:
 
-		// 工作线程
-		std::thread mWorkerThread;
+	// 工作线程
+	std::thread mWorkerThread;
 
-		// 需要线程池处理的任务队列
-        std::queue<Task *> TasksQueue;
+	// 需要线程池处理的任务队列
+    std::queue<Task *> TasksQueue;
 
-		// ture: 表面线程池正在运行  false: 表面 线程停止运行
-		bool bThreadPoolRunning;
+	// ture: 表面线程池正在运行  false: 表面 线程停止运行
+	bool bThreadPoolRunning;
 
-		// 线程 能同时处理的最大 task 的数量
-        uint32_t TasksNumsLimitSize;
+	// 线程 能同时处理的最大 task 的数量
+    uint32_t TasksNumsLimitSize;
 };

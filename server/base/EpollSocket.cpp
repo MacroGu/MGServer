@@ -368,7 +368,7 @@ bool EpollSocket::StartWorkerThread()
     return WorkerThreadPtr->Start();
 }
 
-void EpollSocket::StartEpollEventLoop() 
+void EpollSocket::StartEpollEventLoop(std::function<void()> callBackFun)
 {
     epoll_event *events = new epoll_event[AddressInfo.maxEvents];
     while (EpollStatus != EPOLL_STOPPED)
@@ -389,7 +389,8 @@ void EpollSocket::StartEpollEventLoop()
             this->HandleEpollEvent(events[i]);
         }
 
-		// 可设置服务器单帧时间等
+		// 处理服务器逻辑  定时操作等
+		callBackFun();
     }
     LOG_INFO("epoll wait loop stop ...");
     if (events != NULL) 
@@ -423,10 +424,9 @@ bool EpollSocket::StartEpoll()
 	if (!ret)
 	{
 		LOG_ERROR("error : {}", ret);
-		return ret;
+		return false;
 	}
 
-	StartEpollEventLoop();
 	return true;
 }
 

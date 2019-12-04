@@ -7,6 +7,7 @@
 #include <iostream>
 #include <stdint.h>
 #include <nlohmann/json.hpp>
+#include <functional>
 #include "GameServer.h"
 #include "protocol.h"
 #include "ServerConf.h"
@@ -64,5 +65,7 @@ void GameServer::StartServer()
 	Interface::GetInstance().SetGameSocketWatcher(&watcher);
 
 	if (!SocketPool.StartEpoll()) return;
+
+	SocketPool.StartEpollEventLoop(std::bind(&Interface::GameLogicLoop, &Interface::GetInstance()));
 
 }
