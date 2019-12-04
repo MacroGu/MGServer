@@ -45,7 +45,21 @@
 #define ADDRESS_INFO_CONFIGURE ServerConf::GetInstance().GetAddressInfoConfiguration()
 
 
-// buffer size
-#define MAX_WEBSOCKET_BUFFER 4096
-
-
+// 消息类型定义
+enum EPacketType
+{
+	LOGIN = 100,
+	ENROLL_PLAYER,
+	SEND_PLAYER,
+	RECV_PLAYER,
+	LOGOUT_PLAYER,
+	HIT_PLAYER,
+	DAMAGED_PLAYER,
+	CHAT,
+	ENTER_NEW_PLAYER,
+	SIGNUP,
+	HIT_MONSTER,
+	SYNC_MONSTER,
+	SPAWN_MONSTER,
+	DESTROY_MONSTER
+};

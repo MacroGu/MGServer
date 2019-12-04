@@ -38,10 +38,10 @@ add_executable(server
     ${BASE_FILES}
 )
 if(MSVC)
-	target_link_libraries(server tinyxml hiredis MsgPacket wepoll libmysql ws2_32)
+	target_link_libraries(server tinyxml hiredis wepoll libmysql ws2_32)
 	ADD_DEFINITIONS(-D_CRT_SECURE_NO_WARNINGS -D_CRT_SECURE_NO_WARNINGS -D_WINSOCK_DEPRECATED_NO_WARNINGS -D_SPDLOG_ACTIVE_LEVEL)
 else()
-	target_link_libraries(server tinyxml hiredis MsgPacket mysqlclient)
+	target_link_libraries(server tinyxml hiredis mysqlclient)
 endif()
 
 if(CMAKE_COMPILER_IS_GNUCXX)

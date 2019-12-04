@@ -13,7 +13,6 @@
 #include <stdint.h>
 #include <iostream>
 #include "EpollSocket.h"
-#include "CommonClass.h"
 
 struct stMsgToClient
 {
