@@ -15,7 +15,6 @@
 #include "MysqlHandle.h"
 #include "Interface.h"
 
-extern Interface gInterface;
 
 GameSocketWatcher::GameSocketWatcher()
 {
@@ -40,7 +39,7 @@ int GameSocketWatcher::OnEpollAcceptEvent(stSocketContext& socket_context)
 	curClient = &socket_context;
 	toCurClientData = nullptr;
 	allClients.insert(std::make_pair(socket_context.fd, socket_context));
-	gInterface.NewClientAcceptCallBack(conn_sock);
+	Interface::GetInstance().NewClientAcceptCallBack(conn_sock);
 
 	return 0;
 }
@@ -97,7 +96,7 @@ int GameSocketWatcher::OnEpollWriteableEvent(stSocketContext& socket_context)
 int GameSocketWatcher::OnEpollCloseEvent(stSocketContext& socket_context)
 {
 	LOG_DEBUG("close client client ip: {} client fd: {}", socket_context.client_ip, socket_context.fd);
-	gInterface.DissconnectClientCallBack(socket_context.fd);
+	Interface::GetInstance().DissconnectClientCallBack(socket_context.fd);
 
 	auto clientIter = allClients.find(socket_context.fd);
 	if (clientIter != allClients.end())
@@ -146,7 +145,7 @@ bool GameSocketWatcher::HandleClientNormalSocketData(stSocketContext* socket_con
 	std::shared_ptr<stMsgToClient> recvData(new stMsgToClient());
 	memcpy(recvData->data, clientData, dataLength);
 	recvData->dataLen = dataLength;
-	gInterface.RecvClientDataCallBack(socket_context->fd, recvData);
+	Interface::GetInstance().RecvClientDataCallBack(socket_context->fd, recvData);
 
 	return true;
 }

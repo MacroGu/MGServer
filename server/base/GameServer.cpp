@@ -14,7 +14,6 @@
 #include "MysqlHandle.h"
 #include "Interface.h"
 
-extern Interface gInterface;
 
 GameServer::GameServer()
 {
@@ -61,8 +60,8 @@ void GameServer::StartServer()
 	SocketPool.SetSocketWatcher(&watcher);
 
 
-	gInterface.SetSocketPool(&SocketPool);
-	gInterface.SetGameSocketWatcher(&watcher);
+	Interface::GetInstance().SetSocketPool(&SocketPool);
+	Interface::GetInstance().SetGameSocketWatcher(&watcher);
 
 	if (!SocketPool.StartEpoll()) return;
 

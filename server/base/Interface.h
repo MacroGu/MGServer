@@ -9,14 +9,14 @@
 
 #include <set>
 #include "GameSocketWatcher.h"
+#include "singleton.h"
 
 class EpollSocket;
 
 
-class Interface
+class Interface : public ISingleton<Interface>
 {
 public:
-	Interface();
 	~Interface();
 
 
@@ -39,10 +39,12 @@ public:
 private:
 	EpollSocket* SocketPool;
 	GameSocketWatcher* Watcher;
+	std::set<int> allClients;
 
 
 private:
-	std::set<int> allClients;
-};
+	Interface();
+	friend ISingleton<Interface>;
+	friend class std::unique_ptr<Interface>;
 
-extern Interface gInterface;
+};

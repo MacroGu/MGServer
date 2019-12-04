@@ -8,8 +8,9 @@
 #include "GameSocketWatcher.h"
 #include "EpollSocket.h"
 #include "defines.h"
+#include "../gamelogic/MsgDistribute.h"
 
-Interface gInterface;
+
 
 Interface::Interface()
 {
@@ -33,6 +34,9 @@ int Interface::RecvClientDataCallBack(int ClientFD, std::shared_ptr<stMsgToClien
 {
 
 	LOG_INFO("recv data: {} ", recvData->data);
+
+	// 分发消息
+	MsgDistribute::GetInstance().DistributeMsg(ClientFD, recvData);
 
 	SendDataToCurClient(recvData);
 	for (auto oneClient : allClients)

@@ -31,11 +31,19 @@ set(BASE_FILES
 	main.cpp
 )
 
-source_group(base FILES ${BASE_FILES})
+set(SOURCE_FILES_GAMELOGIC gamelogic)
+set(GAMELOGIC_FILES 
+	${SOURCE_FILES_GAMELOGIC}/MsgDistribute.h
+	${SOURCE_FILES_GAMELOGIC}/MsgDistribute.cpp
+)
+
+source_group(base FILES ${BASE_FILES} )
+source_group(gamelogic FILES ${GAMELOGIC_FILES} )
 
 # Target
 add_executable(server
     ${BASE_FILES}
+	${GAMELOGIC_FILES}
 )
 if(MSVC)
 	target_link_libraries(server tinyxml hiredis wepoll libmysql ws2_32)
