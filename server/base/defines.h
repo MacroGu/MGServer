@@ -48,7 +48,7 @@
 // 消息类型定义
 enum EPacketType
 {
-	LOGIN = 100,
+	LOGIN = 0,
 	ENROLL_PLAYER,
 	SEND_PLAYER,
 	RECV_PLAYER,

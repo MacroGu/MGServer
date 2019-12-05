@@ -49,7 +49,7 @@ void MysqlHandle::Close()
 bool MysqlHandle::SearchAccount(const std::string& Id, const std::string& Password)
 {
 	bool bResult = false;
-	std::string sql = "SELECT * FROM sungminworld.playeraccount WHERE id = '";
+	std::string sql = "SELECT * FROM test.playeraccount WHERE id = '";
 	sql += Id + "' and pw = '" + Password + "'";
 
 	if (mysql_query(Conn, sql.c_str()))
@@ -78,7 +78,7 @@ bool MysqlHandle::SignUpAccount(const std::string& Id, const std::string& Passwo
 {
 	bool bResult = false;
 
-	std::string sql = "INSERT INTO sungminworld.playeraccount (id, pw) VALUES";
+	std::string sql = "INSERT INTO test.playeraccount (id, pw) VALUES";
 	sql += " ('" + Id + "', '" + Password + "')";
 
 	if (mysql_query(Conn, sql.c_str()))

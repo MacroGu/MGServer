@@ -139,7 +139,7 @@ void GameSocketWatcher::SendDataToCurClient(std::shared_ptr<stMsgToClient> toCur
 
 bool GameSocketWatcher::HandleClientNormalSocketData(stSocketContext* socket_context, char clientData[], int dataLength)
 {
-	LOG_INFO("recv client data: {}", clientData);
+	// LOG_INFO("recv client data: {}", clientData);
 
 	// socket_context->stToClient = std::to_string();
 	std::shared_ptr<stMsgToClient> recvData(new stMsgToClient());

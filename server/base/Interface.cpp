@@ -33,19 +33,11 @@ int Interface::NewClientAcceptCallBack(int ClientFD)
 int Interface::RecvClientDataCallBack(int ClientFD, std::shared_ptr<stMsgToClient> recvData)
 {
 
-	LOG_INFO("recv data: {} ", recvData->data);
+	// LOG_INFO("recv data: {} ", recvData->data);
 
 	// 分发消息
 	MsgDistribute::GetInstance().DistributeMsg(ClientFD, recvData);
 
-	SendDataToCurClient(recvData);
-	for (auto oneClient : allClients)
-	{
-		if (SendDataToClient(oneClient, recvData) != 0)
-		{
-			allClients.erase(oneClient);
-		}
-	}
 	return 0;
 }
 
