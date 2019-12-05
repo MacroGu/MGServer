@@ -45,7 +45,7 @@ public:
 	// 广播新玩家数据
 	static void BroadcastNewPlayer(cCharacter& player);
 	// 将角色信息写入socket
-	static void WriteCharactersInfoToSocket(int clientFD);
+	static void WriteCharactersInfoToSocket(std::shared_ptr<stMsgToClient> characterInfo);
 
 	// 初始化怪物信息
 	void InitializeMonsterSet();
