@@ -52,6 +52,10 @@ public:
 
 	void RunGameLogic();
 
+	// protobuf 
+	bool message_1001(int getaSock, s_GateHeaders& gateHead, char* data, int len);	//角色进入地图
+
+
 	// -------   for testing end
 
 

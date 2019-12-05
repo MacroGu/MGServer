@@ -2,6 +2,7 @@
 
 #include "MsgDistribute.h"
 #include "../base/MysqlHandle.h"
+#include "../genproto/map.pb.h"
 
 
 
@@ -76,7 +77,13 @@ void MsgDistribute::DistributeMsg(int clientFD, std::shared_ptr<stMsgToClient> r
 				MsgDistribute::HitMonster(RecvStream, clientFD);
 			}
 			break;
+		case TEST_PROTO:
+			{
+				//message_1001( clientFD, s_GateHeaders(), protoData, leftLen);	//角色进入地图
+			}
+			break;
 		default:
+			message_1001(clientFD, s_GateHeaders(), recvData->data, recvData->dataLen);	//角色进入地图
 			break;
 	}
 
@@ -375,4 +382,30 @@ void MsgDistribute::RunGameLogic()
 		Broadcast(SendStream);
 	}
 
+}
+
+bool MsgDistribute::message_1001(int getaSock, s_GateHeaders& gateHead, char* data, int len)
+{
+	map::Map_EnterMap_Request_1001		_protoRequest;
+	map::Map_EnterMap_Response_1001		_protoResponse;
+
+
+	__minNumber		_mapId;		//地图id
+	__maxNumber		_RoleUid;	//角色uid
+	if (!_protoRequest.ParseFromArray(data, len))return true;
+
+	_mapId = _protoRequest.mapid();
+	_RoleUid = _protoRequest.roleuid();
+
+	//200 协议处理正常 玩家成功进入
+	map::Struct_Point3D* _protoPoint3D = new map::Struct_Point3D;
+	_protoPoint3D->set_x(1);
+	_protoPoint3D->set_z(2);
+	_protoResponse.set_allocated_nowpoint(_protoPoint3D);
+	_protoResponse.set_roleuid(_RoleUid);
+	int _len = _protoResponse.ByteSize();
+	char* _backBuf = new char[_len];
+	_protoResponse.SerializeToArray(_backBuf, _len);
+
+	return true;
 }

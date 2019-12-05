@@ -5,6 +5,9 @@ project(server)
 include_directories(./ ./base ../ ../websocketpp ../wepoll/include)
 link_directories(../libs/mysql)
 
+set(GENPROTO_FILES genproto)
+FILE(GLOB GENPROTO_FILES "./genproto/*.cc" "./genproto/*.h")
+
 set(SOURCE_FILES_PREFIX base)
 set(BASE_FILES 
 	singleton.h
@@ -41,6 +44,7 @@ set(GAMELOGIC_FILES
 	${SOURCE_FILES_GAMELOGIC}/Monster.cpp		
 )
 
+source_group(genproto FILES ${GENPROTO_FILES} )
 source_group(base FILES ${BASE_FILES} )
 source_group(gamelogic FILES ${GAMELOGIC_FILES} )
 
@@ -48,12 +52,13 @@ source_group(gamelogic FILES ${GAMELOGIC_FILES} )
 add_executable(server
     ${BASE_FILES}
 	${GAMELOGIC_FILES}
+	${GENPROTO_FILES}
 )
 if(MSVC)
-	target_link_libraries(server tinyxml hiredis wepoll libmysql ws2_32)
-	ADD_DEFINITIONS(-D_CRT_SECURE_NO_WARNINGS -D_CRT_SECURE_NO_WARNINGS -D_WINSOCK_DEPRECATED_NO_WARNINGS -D_SPDLOG_ACTIVE_LEVEL)
+	target_link_libraries(server tinyxml hiredis protobuf wepoll libmysql ws2_32 )
+	ADD_DEFINITIONS(-D_CRT_SECURE_NO_WARNINGS -D_WINSOCK_DEPRECATED_NO_WARNINGS -D_SPDLOG_ACTIVE_LEVEL)
 else()
-	target_link_libraries(server tinyxml hiredis mysqlclient)
+	target_link_libraries(server tinyxml hiredis protobuf mysqlclient)
 endif()
 
 if(CMAKE_COMPILER_IS_GNUCXX)

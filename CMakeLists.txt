@@ -4,7 +4,8 @@ set(CMAKE_VERBOSE_MAKEFILE OFF)
 # Add the source in project root directory
 aux_source_directory(. DIRSRCS)
 # Add header file include directories
-include_directories(./ ./include ./tinyxml ./server ./client ./wepoll/include ./wepoll/src ./wepoll/src/regular ./wepoll/src/combined ./include/mysql)
+include_directories(./ ./include ./tinyxml ./protobuf ./server ./client ./wepoll/include ./wepoll/src 
+./wepoll/src/regular ./wepoll/src/combined ./include/mysql)
 if(MSVC)
 	include_directories(hiredis/win)
 else()
@@ -12,6 +13,7 @@ else()
 endif()
 # Add block directories
 add_subdirectory(tinyxml)
+add_subdirectory(protobuf)
 add_subdirectory(server)
 
 if(MSVC)

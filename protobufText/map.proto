@@ -1,0 +1,310 @@
+syntax="proto3";
+
+//mapServer 地图服务端 协议
+//版本 1.4
+//修改 2019-11-26
+
+//角色操作协议
+package map;
+
+//---------Struct------------------
+//---------玩家基础信息结构体-------------
+message Struct_Role_Situation
+{
+	int64	RoleUid	=	1;
+							//角色Uid
+	int32	TypeId	=	2;
+							//角色类型Id
+	float	Angle	=	3;
+							//面向角度
+	Struct_Point3D NowPoint = 4;
+							//当前坐标
+	int32	Situation =	5;
+							//0.静止
+							//1.正在移动
+							//。。。。。。
+}
+
+message Struct_Point3D
+{
+	float	Z	=	3;
+							//Z轴坐标
+	float	X	=	4;
+							//X轴坐标
+	float	Y	=	5;
+							//Y轴坐标
+}
+
+//角色属性
+message Struct_Attr
+{
+	int32	attrId		=	1;
+							//属性ID
+	int32	attrValue	=	2;
+							//属性值
+}
+
+//角色基本属性
+message Struct_Attr_Basics
+{
+	int64	RoleUid	=	1;
+							//角色Uid
+	repeated Struct_Attr attrs	=	2;
+							//角色属性
+}
+
+
+
+
+
+//-------------------进入地图------------(1001)
+message Map_EnterMap_Request_1001
+{
+	int32	MapId	=	1;
+							//地图Id
+	int64	RoleUid	=	2;
+							//角色Uid
+}
+
+message Map_EnterMap_Response_1001
+{
+	int32	ErrorCode	=	1;
+								//错误代码
+								//200.已进入地图
+	int64	RoleUid		=	2;
+							//角色Uid
+	Struct_Point3D NowPoint = 3;
+							//当前坐标
+	//其他待加
+}
+
+
+
+//时差获取 发送4次请求 取后 3 次平均值
+//-------------------时差获取------------------(1905)
+message Map_GetTimeGap_Request_1905
+{
+	int64	TimeMs	=	1;
+							//本地时间 毫秒
+}
+message Map_GetTimeGap_Response_1905
+{
+	int64	TimeMs	=	1;
+							//服务器时间 毫秒
+}
+//ct1 = 客户发送时间
+//ct2 = 服务器消息到达时间
+//st  = 服务器返回时间
+//延迟计算 dt = (ct2 - ct1) / 2
+//时差计算 bt = ct1 - st + dt
+
+
+//-------------------角色移动----------(1011)
+message Map_RoleMove_Request_1011
+{
+	int64	RoleUid	=	1;
+							//角色Uid
+	int64	TimeMs	=	2;
+							//本地时间 毫秒
+	float	Angle	=	3;
+							//面向角度
+	Struct_Point3D NowPoint = 4;
+							//当前坐标
+}
+
+message Map_RoleMove_Response_1011
+{
+	int32	ErrorCode	=	1;
+								//错误代码
+								//0.允许移动
+								//400.角色不存在
+	int64	RoleUid		=	2;
+								//角色Uid
+}
+
+
+//-------------------角色停止移动----------(1012)
+message Map_RoleStop_Request_1012
+{
+	int64	RoleUid	=	1;
+							//角色Uid
+	int64	TimeMs	=	2;
+							//本地时间 毫秒
+	float	Angle	=	3;
+							//面向角度
+	Struct_Point3D NowPoint = 4;
+							//当前坐标
+}
+
+message Map_RoleStop_Response_1012
+{
+	int32	ErrorCode	=	1;
+							//错误代码
+							//200.请求成功
+	int64	RoleUid		=	2;
+							//角色Uid
+	Struct_Point3D NowPoint = 3;
+							//当前坐标					
+}
+
+//-------------------角色移动到点----------(1021)
+message Map_RoleMoveToPosition_Request_1021
+{
+	int64	RoleUid	=	1;
+							//角色Uid
+	int64	TimeMs	=	2;
+							//本地时间 毫秒
+	repeated Struct_Point3D ToPosition = 3;
+							//A*路径
+}
+
+message Map_RoleMoveToPosition_Response_1021
+{
+	int32	ErrorCode	=	1;
+								//错误代码
+								//0.允许移动
+								//400.角色不存在
+	int64	RoleUid		=	2;
+								//角色Uid
+}
+
+//------------------获取周围玩家-----------(1061)
+//地图载入完毕后 发送此请求
+message Map_GetAllRole_Request_1061
+{
+	int64	RoleUid		=	1;
+							//角色Uid					
+}
+
+message Map_GetAllRole_Response_1061
+{
+	int32	ErrorCode	=	1;
+								//错误代码
+								//0.请求成功
+	repeated Struct_Role_Situation	RoleMessage	=	2;
+								//其他玩家信息
+}
+
+//----------------玩家位置校验-----------------(1062)
+//玩家位置变动时发送 每秒发送4次
+message Map_RoleMoveCheckout_Request_1062
+{
+	int64	RoleUid	=	1;
+							//角色Uid
+	int64	TimeMs	=	2;
+							//本地时间 毫秒
+	Struct_Point3D NowPoint = 3;
+							//当前坐标	
+}
+
+//玩家位置与服务器偏差过大，进行拉回操作 （正常不返回）
+message Map_RoleMoveCheckout_Response_1062
+{
+	int64	RoleUid	=	1;
+							//角色Uid
+	int64	TimeMs	=	2;
+							//本地时间 毫秒
+	Struct_Point3D NowPoint = 3;
+							//当前坐标	
+}
+
+//------------------客户端请求释放技能-----------(1200)
+message Map_RecastSkill_Request_1200
+{
+	int32	SkillID		=	1;
+							//技能ID
+	int64	RoleUid		=	2;
+							//角色Uid							
+	int64	TargetUid	=	3;
+							//被攻击者的entityID
+}
+
+message Map_RecastSkill_Response_1200
+{
+	int32	ErrorCode	=	1;
+								//错误代码
+								//0.释放成功
+}
+
+//------------------属性获取-----------(1221)
+message Map_RoleGetAttr_Request_1221
+{
+	int64	RoleUid		=	1;
+							//角色Uid	
+	repeated int32 attrId = 2;
+							//属性Id
+}
+
+message Map_RoleGetAttr_Response_1221
+{
+	int32	ErrorCode	=	1;
+							//错误代码
+							//0.获取成功
+	Struct_Attr_Basics	attrs	=	2;
+							//角色属性
+}
+
+
+
+
+//------------------服务端广播结构-------
+
+//------------其他玩家进入---------------
+message Map_RoleEnterMap_Broadcast_1101
+{
+	int64	RoleUid	=	1;
+							//角色Uid
+	float	Angle	=	2;
+							//面向角度
+	Struct_Point3D NowPoint = 3;
+							//当前坐标
+}
+//----------其他玩家移动-----------(1111)
+message Map_RoleMove_Broadcast_1111
+{
+	int64	RoleUid	=	1;
+							//角色Uid
+	int64	TimeMs	=	2;
+							//服务器时间 毫秒
+	float	Angle	=	3;
+							//面向角度
+	Struct_Point3D NowPoint = 4;
+							//当前坐标
+}
+
+//----------其他玩家停止移动-----------(1112)
+message Map_RoleStop_Broadcast_1112
+{
+	int64	RoleUid	=	1;
+							//角色Uid
+	float	Angle	=	2;
+							//面向角度
+	Struct_Point3D NowPoint = 3;
+							//当前坐标
+}
+
+//----------其他玩家移动到点-----------(1121)
+message Map_RoleMoveToPosition_Broadcast_1121
+{
+	int64	RoleUid	=	1;
+							//角色Uid
+	int64	TimeMs	=	2;
+							//本地时间 毫秒
+	Struct_Point3D StartPosition = 3;
+							//开始移动的位置
+	Struct_Point3D ToPosition = 4;
+							//欲移动到的位置
+}
+//------------其他玩家离开---------------(1151)
+message Map_RoleRemove_Broadcast_1151
+{
+	int64	RoleUid	=	1;
+							//角色Uid
+}
+
+//------------玩家属性的变化---------------(1201)
+message Map_AttrChange_Broadcast_1201
+{
+	Struct_Attr_Basics	attrs	=	1;
+							//角色属性
+}

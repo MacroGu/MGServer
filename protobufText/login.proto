@@ -1,0 +1,90 @@
+syntax="proto3";
+
+//loginServer 登录服务器
+
+//登录注册协议
+package login;
+
+//-----------获取邮箱验证码	---------------(1)
+message Login_GetEmailCode_Request_1
+{
+	string email = 1;
+	//邮箱地址
+}
+//------------返回数据类型--------------
+message Login_GetEmailCode_Response_1
+{
+	int32 ErrorCode = 1;
+	//200.验证码已发送
+	//401.邮箱已注册
+	//412.邮箱格式错误
+}
+
+//-------------邮箱注册账号---------------	(11)
+message Login_RegisterEmail_Request_11
+{
+	string code = 1;
+	string email = 2;
+	string name = 3;
+	string pass = 4;
+}
+
+message Login_RegisterEmail_Response_11
+{
+	int32 ErrorCode = 1;
+	//200.注册成功
+	//411.验证码错误
+	//412.邮箱未获取注册码、不合法
+	//421.昵称不合法
+	int64 userId = 2;
+}
+
+//-----------账号 + 密码登录-----------------	(21)
+message Login_UserIdLogin_Request_21
+{
+	int64 userId = 1;
+	string pass = 2;
+}
+
+message Login_UserIdLogin_Response_21
+{
+	int32 ErrorCode = 1;
+	//200.登录成功
+	//300.账号或密码错误
+	//311.账号已登录
+	int64 userId = 2;
+	string key = 3;
+	string ip = 4;
+	uint32 port = 5;
+}
+
+//------------邮箱 + 密码登录------------	(22)
+message Login_EmailLogin_Request_22
+{
+	string email = 1;
+	string pass = 2;
+}
+
+message Login_EmailLogin_Response_22
+{
+	int32 ErrorCode = 1;
+	//200.登录成功
+	//300.账号或密码错误
+	//311.账号已登录
+	int64 userId = 2;
+	string key = 3;
+	string ip = 4;
+	int32 port = 5;
+}
+
+//----------------账号+key密钥验证---------------	(25)
+message Login_keyLogin_Request_25
+{
+	int64 userId = 1;
+	string key = 2;
+}
+
+message Login_keyLogin_Response_25
+{
+	int32 ErrorCode = 1;
+}

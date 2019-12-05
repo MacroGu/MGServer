@@ -61,5 +61,37 @@ enum EPacketType
 	HIT_MONSTER,
 	SYNC_MONSTER,
 	SPAWN_MONSTER,
-	DESTROY_MONSTER
+	DESTROY_MONSTER,
+	TEST_PROTO
 };
+
+
+// 协议的定义
+typedef unsigned short __minNumber;
+typedef int __number;
+typedef long long __maxNumber;
+
+
+
+//内部通讯协议头
+struct s_serverHeaders
+{
+	__minNumber		Id;				//网关通讯 代替 sock 
+	__minNumber		messageId;
+};
+
+//Gate 网关通讯协议
+struct s_GateHeaders
+{
+	//	__number		sock;
+	__maxNumber		userId;
+	__minNumber		messageId;
+};
+
+//外部通讯协议头
+struct s_clientHeaders
+{
+	__minNumber		messageId;
+};
+
+
